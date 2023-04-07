@@ -7,4 +7,4 @@ nextflow \
     run \
     clustertracker.nf \
     -profile docker \
-    --pb "/Users/snadeau/Documents/repos/cluster-detection/nextflow/clustertracker/assets/test_data/public-2021-06-09.all.masked.nextclade.pangolin.pb.gz"
+    --input_fasta "data/sars_cov_2_boston_confa_outbreak.fasta"
