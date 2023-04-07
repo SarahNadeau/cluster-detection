@@ -1,6 +1,6 @@
 # nextflow log and intermediate files
 .DS_Store
-.nextflow.log
+.nextflow.log*
 .nextflow/
 work/
 
