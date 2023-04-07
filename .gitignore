@@ -1,0 +1,4 @@
+# nextflow log and intermediate files
+nextflow/.nextflow.log
+nextflow/.nextflow/
+nextflow/work/
