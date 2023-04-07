@@ -1,8 +1,8 @@
 nextflow.enable.dsl=2
 
 // Script parameters
-params.pb = "/Users/snadeau/Documents/repos/cluster-detection/nextflow/clustertracker/assets/test_data/public-2021-06-09.all.masked.nextclade.pangolin.pb.gz"  // protobuf
-params.metadata = "/Users/snadeau/Documents/repos/cluster-detection/nextflow/clustertracker/assets/test_data/regional-samples.txt"  // tsv with names of samples and associated regions in 1st and 2nd columns
+params.pb = "assets/test_data/public-2021-06-09.all.masked.nextclade.pangolin.pb.gz"  // protobuf
+params.metadata = "assets/test_data/regional-samples.txt"  // tsv with names of samples and associated regions in 1st and 2nd columns
 params.output_folder = "results"
 
 process matutils_introduce {
@@ -24,7 +24,6 @@ process matutils_introduce {
         """
         set -eu
 
-        echo `pwd`
         matUtils introduce -i !{pb} -s !{metadata} -o "test.tsv"
         """
 }
