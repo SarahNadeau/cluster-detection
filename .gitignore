@@ -1,4 +1,8 @@
 # nextflow log and intermediate files
-nextflow/.nextflow.log
-nextflow/.nextflow/
-nextflow/work/
+.DS_Store
+.nextflow.log
+.nextflow/
+work/
+
+# results files
+results/

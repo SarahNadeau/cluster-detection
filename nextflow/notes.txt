@@ -13,3 +13,13 @@ matUtils extract -i public-2021-04-20.all.masked.nextclade.pangolin.pb -k "ESP/h
 # They already provide a snakemake workflow that takes in a fasta and outputs putative introductions:
 cd usher/workflows
 snakemake --use-conda --cores 4 --config FASTA="/path/to/fasta" RUNTYPE="introduce"
+
+I couldn't get BSBP's assembly & annotation wf running on gizmo, got this error:
+Error executing process > 'INFILE_HANDLING_UNIX (test)'
+
+Caused by:
+  Failed to pull singularity image
+  command: singularity pull  --name ubuntu-jammy.img.pulling.1680886266107 docker://ubuntu:jammy > /dev/null
+  status : 255
+  message:
+    [31mFATAL:   While making image from oci registry: failed to get checksum for docker://ubuntu:jammy: Error reading manifest jammy in docker.io/library/ubuntu: manifest unknown: OCI index found, but accept header does not support OCI indexes
