@@ -1,3 +1,5 @@
+// This workflow runs matutils introduce (clustertracker).
+
 // Example parameters
 params.input_fasta = "assets/test_data/sars_cov_2_boston_confa_outbreak.fasta"  // sequences to be analyzed (don't need to be aligned)
 params.metadata = "assets/test_data/sars_cov_2_boston_confa_outbreak_clustertracker_metadata.txt"  // tsv with names of samples and associated regions in 1st and 2nd columns
