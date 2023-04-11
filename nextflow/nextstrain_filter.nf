@@ -1,7 +1,7 @@
 // This workflow adds context sequences to a focal set of SARS-CoV-2 sequences using Nextstrain's curated data and augur filter
 
 // Example parameters
-params.input_fasta = "results/alignment.fasta"  // focal sequences, assumed aligned to same reference as Nextstrain context
+params.input_fasta = "assets/test_data/sars_cov_2_boston_confa_outbreak_alignment.fasta"  // focal sequences, assumed aligned to same reference as Nextstrain context
 params.context_region_name = "north-america"  // region to choose curated subsample (~4000 sequences) from; one of 'global', 'africa', 'asia', 'europe', 'north-america', 'oceania' or 'south-america'
 params.reference_fasta = "assets/NC_045512v2.fa"  // reference that context and focal sequences are aligned to
 params.reference_name  = "NC_045512v2"  // name of reference sequence in focal sequences to ignore for priority calculation

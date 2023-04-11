@@ -2,6 +2,7 @@
 
 // Example parameters
 params.input_fasta = "assets/test_data/sars_cov_2_boston_confa_outbreak.fasta"  // sequences to be analyzed (don't need to be aligned)
+params.is_aligned = ""  // "" if sequences need to be aligned, any string, e.g. "true" if they are already aligned
 params.metadata = "assets/test_data/sars_cov_2_boston_confa_outbreak_clustertracker_metadata.txt"  // tsv with names of samples and associated regions in 1st and 2nd columns
 params.reference = "assets/NC_045512v2.fa"  // reference genome to align samples to
 params.output_folder = "results"  // where results files will be saved to
@@ -14,11 +15,15 @@ include { build_tree } from './modules/iqtree.nf'
 // The workflow itself
 workflow {
 
-    input_fasta = file(params.input_fasta)
-    reference = file(params.reference)
-    metadata = file(params.metadata)
+    input_fasta = channel.fromPath(params.input_fasta)
+    reference = channel.fromPath(params.reference)
+    metadata = channel.fromPath(params.metadata)
 
-    alignment = align_sequences(input_fasta, reference) 
+    if( !params.is_aligned )
+        alignment = align_sequences(input_fasta, reference)
+    else
+        alignment = input_fasta
+     
     vcf = fasta_to_vcf(alignment, reference)
     tree = build_tree(alignment, params.outgroup_taxon)
     mat_pb = build_mat(vcf, tree)

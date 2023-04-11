@@ -7,5 +7,4 @@ nextflow \
     run \
     clustertracker.nf \
     -profile docker \
-    -resume \
-    --input_fasta "data/sars_cov_2_boston_confa_outbreak.fasta"
+    -resume
