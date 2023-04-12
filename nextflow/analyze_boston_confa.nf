@@ -17,12 +17,17 @@ params.max_context_sequences = 500 // maximum overall number of sequences (will 
 // Tree-building parameters
 params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as outgroup
 
+// Method-specific parameters
+params.tn93_distance_threshold = 0.0000667 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site)
+params.hiv_trace_min_overlap = 15000  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance
+
 // Import processes from modules
 include { download_nextstrain_covid_data; get_proximities; get_priorities; augur_filter } from './modules/augur.nf'
 include { build_tree } from './modules/iqtree.nf'
 include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce } from './modules/matutils.nf'
 include { get_metadata_from_nextstrain } from './modules/metadata_utils.nf'
 include { treetime_mugration } from './modules/treetime.nf'
+include { hiv_trace } from './modules/hiv_trace.nf'
 
 // The workflow itself
 workflow {
@@ -75,8 +80,13 @@ workflow {
         full_metadata,
         params.trait_name)
 
-    // TODO: run BEAST1 DTA to estiamte ancestral locations
+    // Run a SNP-distance based clustering method
+    hiv_trace(
+        augur_filter.out.alignment_plus_filtered_context,
+        reference_fasta,
+        params.tn93_distance_threshold,
+        params.hiv_trace_min_overlap)
 
-    // TODO: run microbetrace to estimate introductions
+    // TODO: run BEAST1 DTA to estiamte ancestral locations
 
 }
