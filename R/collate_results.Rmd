@@ -1,0 +1,86 @@
+This script is to collate output files from different methods into a unified results files
+
+```{r}
+library(tidyverse)
+library(treeio)
+library(ggtree)
+library(dplyr)
+
+# Analysis-specific parameters
+outbreak_annotation <- "CONF_A"
+data_dir <- "nextflow/results/boston_confa"
+```
+
+# Load tabular results files
+```{r}
+clustertracker_results <- read.delim(paste0(data_dir, "/clustertracker/introductions.tsv"))
+```
+
+# Deal with tree results files
+Convert timetree output to New Hampshire eXtended format
+```{bash}
+cd nextflow/results/boston_confa/mugration/
+grep "^ Tree" annotated_tree.nexus | sed "s/ Tree tree1=//g" | sed "s/&/&&NHX:/g" > annotated_tree.nhx
+cd ../../../../
+```
+
+Get clusters from treetime mugration output
+```{r}
+mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
+node_annotations <- as.data.frame(as_tibble(mugration_treeio))
+mugration_phylo <- ape::as.phylo(mugration_treeio)
+
+# pre-order tree traversal to find outbreak MRCA nodes
+mugration_phylo <- ape::reorder.phylo(mugration_phylo, order = "postorder", index.only = F)
+postorder_edges <- mugration_phylo$edge
+
+cluster_mrcas <- c()
+mrca_found_yet <- F
+for (i in nrow(postorder_edges):1) {
+    child <- postorder_edges[i, 2]
+    annotation <- node_annotations[child, 5]
+    if (annotation == outbreak_annotation & !mrca_found_yet) {
+        print(paste("Found an outbreak MRCA at node", child))
+        cluster_mrcas <- c(cluster_mrcas, child)
+        mrca_found_yet <- T
+    } else if (annotation != outbreak_annotation) {
+        mrca_found_yet <- F
+    }
+}
+
+# deal with polytomies: if one MRCA is a descendent of another, consider only the node with more descendents
+sub_mrcas <- c()
+for (i in length(cluster_mrcas):2) {
+    next_mrca <- cluster_mrcas[i - 1]
+    descendents_of_next_mrca <- phytools::getDescendants(tree = mugration_phylo, node = next_mrca)
+    if (cluster_mrcas[i] %in% descendents_of_next_mrca) {
+        sub_mrcas <- c(sub_mrcas, cluster_mrcas[i])
+    }
+}
+cluster_mrcas_depolytomied <- setdiff(cluster_mrcas, sub_mrcas)
+```
+
+Get mugration outbreak clusters is a tabular format
+```{r}
+is_first <- T
+for (mrca in cluster_mrcas_depolytomied) {
+    descendant_idxs <- phytools::getDescendants(tree = mugration_phylo, node = mrca)
+    tip_idxs <- descendant_idxs[descendant_idxs <= length(mugration_phylo$tip.label)]
+    tip_names <- mugration_phylo$tip.label[tip_idxs]
+    res <- data.frame(
+        sample = tip_names,
+        introduction_node = paste(outbreak_annotation, "node", mrca, sep = "_"),
+        cluster_size = length(tips),
+        region = node_annotations[tip_idxs, 5])
+    if (is_first) {
+        mugration_results <- res
+    } else {
+        mugration_results <- rbind(mugration_results, res)
+    }
+}
+
+# ggtree(mugration_treeio) + 
+#     geom_label(aes(label = division)) +
+#     geom_tiplab()
+# ggsave("~/Downloads/tree.png", width = 20, height = 20)    
+```
