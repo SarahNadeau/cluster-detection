@@ -1,7 +1,10 @@
 // Download Nextstrain-curated dataset
 process download_nextstrain_covid_data {
     container 'nextstrain/base:build-20230411T103027Z'
-    publishDir params.output_folder, mode: 'copy', pattern: 'metadata_*'
+    publishDir(
+        path: "${params.output_folder}/augur", 
+        mode: 'copy',
+        pattern: 'metadata_*')
 
     cpus 1
     memory "1 GB"
@@ -24,7 +27,7 @@ process download_nextstrain_covid_data {
 // Get proximity list of most related context sequences for a focal set
 process get_proximities {
     container 'staphb/augur:16.0.3'
-    publishDir params.output_folder, mode: 'copy'
+    publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     cpus 2
     memory "1 GB"
@@ -54,7 +57,7 @@ process get_proximities {
 // Get priority ranking of most related context sequences for a focal set
 process get_priorities {
     container 'staphb/augur:16.0.3'
-    publishDir params.output_folder, mode: 'copy'
+    publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     cpus 2
     memory "1 GB"
@@ -87,7 +90,7 @@ process get_priorities {
 // Filter context sequence set based on region and genetic priorities
 process augur_filter {
     container 'staphb/augur:16.0.3'
-    publishDir params.output_folder, mode: 'copy'
+    publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     cpus 2
     memory "1 GB"

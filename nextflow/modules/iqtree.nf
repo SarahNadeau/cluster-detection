@@ -1,7 +1,7 @@
 // Build a phylogenetic tree using a maximum likelihood approach
 process build_tree {
     container 'staphb/iqtree2:2.2.2.2'
-    publishDir params.output_folder, mode: 'copy'
+    publishDir(path: "${params.output_folder}/iqtree", mode: 'copy')
 
     cpus 2
     memory "1 GB"

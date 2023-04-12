@@ -3,7 +3,7 @@ nextflow.enable.dsl=2
 // Align sequences to reference
 process align_sequences {
     container 'pathogengenomics/usher@sha256:a311c7b896279a41a36608c29c8ecdc5b8420c01b27ffad160a1867098051c01'
-    publishDir params.output_folder, mode: 'copy'
+    publishDir(path: "${params.output_folder}/matutils", mode: 'copy')
 
     cpus 2
     memory "1 GB"
@@ -26,7 +26,7 @@ process align_sequences {
 // Convert alignment to VCF file
 process fasta_to_vcf {
     container 'pathogengenomics/usher@sha256:a311c7b896279a41a36608c29c8ecdc5b8420c01b27ffad160a1867098051c01'
-    publishDir params.output_folder, mode: 'copy'
+    publishDir(path: "${params.output_folder}/matutils", mode: 'copy')
 
     cpus 1
     memory "1 GB"
@@ -52,7 +52,7 @@ process fasta_to_vcf {
 // Build mutation-annotated tree, save in protobuf file
 process build_mat {
     container 'pathogengenomics/usher@sha256:a311c7b896279a41a36608c29c8ecdc5b8420c01b27ffad160a1867098051c01'
-    publishDir params.output_folder, mode: 'copy'
+    publishDir(path: "${params.output_folder}/matutils", mode: 'copy')
 
     cpus 2
     memory "1 GB"
@@ -75,7 +75,7 @@ process build_mat {
 // Apply heuristic to identify introductions
 process matutils_introduce {
     container 'pathogengenomics/usher@sha256:a311c7b896279a41a36608c29c8ecdc5b8420c01b27ffad160a1867098051c01'
-    publishDir params.output_folder, mode: 'copy'
+    publishDir(path: "${params.output_folder}/clustertracker", mode: 'copy')
 
     cpus 2
     memory "1 GB"
