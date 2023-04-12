@@ -4,10 +4,12 @@ This script is to collate output files from different methods into a unified res
 library(tidyverse)
 library(treeio)
 library(ggtree)
-library(dplyr)
+library(rjson)
 
 # Analysis-specific parameters
 outbreak_annotation <- "CONF_A"
+outbreak_metadata <- read.table("clean_data/sars_cov_2_boston_confa_outbreak_clustertracker_metadata.txt") %>%
+    filter(V2 == "CONF_A")
 data_dir <- "nextflow/results/boston_confa"
 ```
 
@@ -70,7 +72,7 @@ for (mrca in cluster_mrcas_depolytomied) {
     res <- data.frame(
         sample = tip_names,
         introduction_node = paste(outbreak_annotation, "node", mrca, sep = "_"),
-        cluster_size = length(tips),
+        cluster_size = length(tip_names),
         region = node_annotations[tip_idxs, 5])
     if (is_first) {
         mugration_results <- res
@@ -83,4 +85,45 @@ for (mrca in cluster_mrcas_depolytomied) {
 #     geom_label(aes(label = division)) +
 #     geom_tiplab()
 # ggsave("~/Downloads/tree.png", width = 20, height = 20)    
+```
+
+Parse HIV-TRACE json output
+// TODO: these results only contain clusters > size 1, missing singletons
+```{r}
+clusters_json <- readr::read_file(paste0(data_dir, "/hiv_trace/clusters.json"))
+clusters_list <- rjson::fromJSON(json_str = clusters_json)
+
+cluster_idxs <- clusters_list$trace_results$Nodes$cluster$values
+clustered_sample_names <- clusters_list$trace_results$Nodes$id
+
+hivtrace_results <- data.frame(
+    sample = clustered_sample_names,
+    introduction_node = cluster_idxs
+) %>% 
+    group_by(introduction_node) %>% 
+    mutate(cluster_size = n()) %>%
+    mutate(region = case_when(sample %in% outbreak_metadata$V1 ~ "CONF_A", T ~ "Other"))
+```
+
+# Combine all results
+```{r}
+full_results <- rbind(
+    clustertracker_results %>% 
+        select(sample, introduction_node, cluster_size, region) %>%
+        mutate(method = "clustertracker"),
+    mugration_results %>% mutate(method = "mugration"),
+    hivtrace_results %>% mutate(method = "hivtrace")
+)
+
+full_results %>%
+    group_by(method) %>%
+    summarize(n_focal_samples = sum(region == "CONF_A"))
+
+# TODO: account for extraneous samples clustered with outbreak samples
+full_results %>%
+    filter(region == "CONF_A") %>%
+    group_by(method) %>%
+    summarize(
+        n_clusters = length(unique(introduction_node)),
+        n_samples_accounted_for = n())
 ```
