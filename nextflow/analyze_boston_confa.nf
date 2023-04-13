@@ -19,7 +19,7 @@ params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as o
 
 // Method-specific parameters
 params.tn93_distance_threshold = 0.0000667 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site)
-params.hiv_trace_min_overlap = 15000  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance
+params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
 
 // Import processes from modules
 include { download_nextstrain_covid_data; get_proximities; get_priorities; augur_filter } from './modules/augur.nf'
