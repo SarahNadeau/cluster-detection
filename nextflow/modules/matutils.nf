@@ -7,7 +7,6 @@ process align_sequences {
 
     cpus 2
     memory "1 GB"
-    errorStrategy "retry"
 
     input:
         path input_fasta
@@ -30,7 +29,6 @@ process fasta_to_vcf {
 
     cpus 1
     memory "1 GB"
-    errorStrategy "retry"
 
     input:
         path alignment
@@ -56,7 +54,6 @@ process build_mat {
 
     cpus 2
     memory "1 GB"
-    errorStrategy "retry"
 
     input:
         path vcf
@@ -79,7 +76,6 @@ process matutils_introduce {
 
     cpus 2
     memory "1 GB"
-    errorStrategy "retry"
 
     input:
         path pb 
