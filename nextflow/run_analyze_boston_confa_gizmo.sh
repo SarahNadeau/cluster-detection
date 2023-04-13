@@ -4,22 +4,19 @@
 set -euo pipefail
 
 # Nextflow Configuration File
-NXF_CONFIG=~/nextflow/nextflow.gizmo.config
+NXF_CONFIG=./nextflow.gizmo.config
 
-# Load the Nextflow module (if running on rhino/gizmo)
+# Load modules (specific to rhino/gizmo)
+ml purge
 ml Nextflow/22.10.6
-
-# Load the Singularity module (if running on rhino/gizmo with Singularity)
-ml Singularity
-# Make sure that the singularity executables are in the PATH
-export PATH=$SINGULARITYROOT/bin/:$PATH
+ml Apptainer/1.1.6
 
 # Run the workflow
 nextflow \
     run \
+    -c $NXF_CONFIG \
     analyze_boston_confa.nf \
-    -profile singularity \
-    --context_region_name \
+    -profile apptainer \
     --context_group_by 'region' \
     --max_context_sequences 100 \
     -resume
