@@ -1,4 +1,4 @@
-// This workflow is to analyze the Bonston confA outbreak dataset with clustertracker.
+// This workflow is to analyze the Bonston confA outbreak dataset with several methods.
 
 // Input & output data parameters
 params.input_fasta = "../clean_data/sars_cov_2_boston_confa_outbreak.fasta"  // unaligned focal sequences
@@ -11,7 +11,7 @@ params.context_region_name = "north-america"  // draw context set from ~4000 Nex
 params.reference_fasta = "assets/NC_045512v2.fa"  // SARS-CoV-2 reference genome
 params.reference_name  = "NC_045512v2"  // name of reference sequence to ignore for priority calculation
 params.min_sequence_length = 20000  // minimum length of context sequences
-params.group_by = "'year', 'month', 'division'"  // Nextstrain augur filter group by specification for context set (in the US divisions are states)
+params.context_group_by = "'year', 'month', 'division'"  // Nextstrain augur filter group by specification for context set (in the US divisions are states)
 params.max_context_sequences = 500 // maximum overall number of sequences (will sample probabalistically from groups)
 
 // Tree-building parameters
@@ -56,7 +56,7 @@ workflow {
         get_priorities.out.priorities, 
         get_priorities.out.index,
         params.min_sequence_length,
-        params.group_by,
+        params.context_group_by,
         params.max_context_sequences)
 
     // Get clustertracker metadata

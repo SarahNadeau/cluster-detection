@@ -7,6 +7,6 @@ nextflow \
     run \
     analyze_boston_confa.nf \
     -profile docker \
-    --group_by 'division' \
-    --max_context_sequences 100 \
+    --context_group_by 'division' \
+    --max_context_sequences 00 \
     -resume
