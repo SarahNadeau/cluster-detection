@@ -4,5 +4,9 @@
 .nextflow/
 work/
 
+# data files
+raw_data/
+clean_data/
+
 # results files
 results/
