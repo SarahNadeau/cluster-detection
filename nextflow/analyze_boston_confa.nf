@@ -20,11 +20,13 @@ params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as o
 // Method-specific parameters
 params.tn93_distance_threshold = 0.0000667 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site)
 params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
+params.clustertracker_key_colname = "sample" // column name in clustertracker metadata
+params.clustertracker_metadata_colnames = "introduction_node,introduction_rank,growth_score,cluster_size,intro_confidence,parent_confidence,region,origins,origins_confidence,mutation_path"  // column names from clustertracker metadata to include in taxonium file
 
 // Import processes from modules
 include { download_nextstrain_covid_data; get_proximities; get_priorities; augur_filter } from './modules/augur.nf'
 include { build_tree } from './modules/iqtree.nf'
-include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce } from './modules/matutils.nf'
+include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce; pb_to_taxonium } from './modules/matutils.nf'
 include { get_metadata_from_nextstrain } from './modules/metadata_utils.nf'
 include { treetime_mugration } from './modules/treetime.nf'
 include { hiv_trace } from './modules/hiv_trace.nf'
@@ -73,6 +75,11 @@ workflow {
         params.outgroup_taxon)
     mat_pb = build_mat(vcf, tree)
     matutils_introduce(mat_pb, full_metadata)
+    pb_to_taxonium(
+        mat_pb, 
+        matutils_introduce.out.introductions_tsv, 
+        params.clustertracker_key_colname,
+        params.clustertracker_metadata_colnames)
 
     // Run nextstrain mugration to estimate ancestral locations
     treetime_mugration(

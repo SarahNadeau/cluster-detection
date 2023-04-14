@@ -82,11 +82,40 @@ process matutils_introduce {
         path metadata 
 
     output:
-        path "introductions.tsv"
+        path "introductions.tsv", emit: introductions_tsv
 
     shell:
         """
         set -eu
         matUtils introduce --threads 2 -i !{pb} -s !{metadata} -o "introductions.tsv"
+        """
+}
+
+// Convert mat protobuf file and metadata into taxonium format for interactive visualization
+process pb_to_taxonium {
+    container 'snads/taxoniumtools:2.0.91'
+    publishDir(path: "${params.output_folder}/clustertracker", mode: 'copy')
+
+    cpus 1
+    memory "1 GB"
+
+    input:
+        path pb
+        path metadata
+        val key_colname
+        val metadata_colnames
+
+    output:
+        path "taxonium.jsonl.gz"
+
+    shell:
+        """
+        set -eu
+        usher_to_taxonium \
+            --input !{pb} \
+            --output taxonium.jsonl.gz \
+            --metadata !{metadata} \
+            --key_column !{key_colname} \
+            --columns !{metadata_colnames}
         """
 }
