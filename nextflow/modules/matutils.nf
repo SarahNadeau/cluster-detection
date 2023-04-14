@@ -33,17 +33,24 @@ process fasta_to_vcf {
     input:
         path alignment
         path reference
+        path mask_sites_vcf
     
     output:
-        path "masked.vcf"
+        path "alignment.vcf"
 
-    // TODO: abstract masking file
     shell:
         """
         set -eu
-        wget https://raw.githubusercontent.com/W-L/ProblematicSites_SARS-CoV2/master/problematic_sites_sarsCov2.vcf
+        
         awk '{print}' !{reference} !{alignment} > alignment_w_reference.fasta
-        faToVcf -maskSites=problematic_sites_sarsCov2.vcf alignment_w_reference.fasta masked.vcf
+
+        # Convert to VCF, optionally masking some sites
+        echo "hi !{mask_sites_vcf}"
+        if [[ !{mask_sites_vcf} != 'NO_MASK_FILE' ]]; then
+            faToVcf -maskSites=!{mask_sites_vcf} alignment_w_reference.fasta alignment.vcf
+        else
+            faToVcf alignment_w_reference.fasta alignment.vcf
+        fi
         """
 }
 
