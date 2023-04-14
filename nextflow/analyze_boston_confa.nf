@@ -1,8 +1,8 @@
 // This workflow is to analyze the Bonston confA outbreak dataset with several methods.
 
 // Input & output data parameters
-params.input_fasta = "../clean_data/sars_cov_2_boston_confa_outbreak.fasta"  // unaligned focal sequences
-params.input_metadata = "../clean_data/sars_cov_2_boston_confa_outbreak_clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
+params.input_fasta = "../clean_data/sars_cov_2_lemiux_boston/sars_cov_2_boston_confa_outbreak.fasta"  // unaligned focal sequences
+params.input_metadata = "../clean_data/sars_cov_2_lemiux_boston/sars_cov_2_boston_confa_outbreak_clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
 params.trait_name = "division" // colname in metadata for trait to reconstruct
 params.output_folder = "results/boston_confa"  // where results files will be saved to
 
@@ -18,6 +18,7 @@ params.max_context_sequences = 500 // maximum overall number of sequences (will 
 params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as outgroup
 
 // Method-specific parameters
+params.mask_sites_vcf = "../clean_data/sars_cov_2_lemiux_boston/problematic_sites_sarsCov2.vcf" // vcf file of problematic sites to mask
 params.tn93_distance_threshold = 0.0000667 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site)
 params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
 
@@ -35,6 +36,7 @@ workflow {
     input_fasta = channel.fromPath(params.input_fasta)
     input_metadata = channel.fromPath(params.input_metadata)
     reference_fasta = channel.fromPath(params.reference_fasta)
+    mask_sites_vcf = channel.fromPath(params.mask_sites_vcf)
 
     // Align focal sequences
     focal_alignment = align_sequences(input_fasta, reference_fasta)
@@ -67,7 +69,8 @@ workflow {
     // Run clustertracker to estimate introductions
     vcf = fasta_to_vcf(
         augur_filter.out.alignment_plus_filtered_context, 
-        reference_fasta)
+        reference_fasta,
+        mask_sites_vcf)
     tree = build_tree(
         augur_filter.out.alignment_plus_filtered_context, 
         params.outgroup_taxon)
