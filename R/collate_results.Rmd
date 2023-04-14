@@ -3,7 +3,6 @@ This script is to collate output files from different methods into a unified res
 ```{r}
 library(tidyverse)
 library(treeio)
-library(ggtree)
 library(rjson)
 
 # Analysis-specific parameters
@@ -36,59 +35,63 @@ mugration_phylo <- ape::as.phylo(mugration_treeio)
 mugration_phylo <- ape::reorder.phylo(mugration_phylo, order = "postorder", index.only = F)
 postorder_edges <- mugration_phylo$edge
 
-cluster_mrcas <- c()
-mrca_found_yet <- F
+# Traverse tree, finding import events
+is_first <- T
 for (i in nrow(postorder_edges):1) {
+    parent <- postorder_edges[i, 1]
     child <- postorder_edges[i, 2]
-    annotation <- node_annotations[child, 5]
-    if (annotation == outbreak_annotation & !mrca_found_yet) {
-        print(paste("Found an outbreak MRCA at node", child))
-        cluster_mrcas <- c(cluster_mrcas, child)
-        mrca_found_yet <- T
-    } else if (annotation != outbreak_annotation) {
-        mrca_found_yet <- F
-    }
+    parent_annotation <- node_annotations[parent, 5]
+    child_annotation <- node_annotations[child, 5]
+    if (is.na(parent_annotation) || child_annotation != parent_annotation) {
+        introduction_data_tmp <- data.frame(
+            parent = parent,
+            child = child,
+            parent_annotation = parent_annotation,
+            child_annotation = child_annotation
+        )
+        if (is_first) {
+            introduction_data <- introduction_data_tmp
+            is_first <- F
+        } else {
+            introduction_data <- rbind(introduction_data, introduction_data_tmp)
+        }
+    }  
 }
-
-# deal with polytomies: if one MRCA is a descendent of another, consider only the node with more descendents
-sub_mrcas <- c()
-for (i in length(cluster_mrcas):2) {
-    next_mrca <- cluster_mrcas[i - 1]
-    descendents_of_next_mrca <- phytools::getDescendants(tree = mugration_phylo, node = next_mrca)
-    if (cluster_mrcas[i] %in% descendents_of_next_mrca) {
-        sub_mrcas <- c(sub_mrcas, cluster_mrcas[i])
-    }
-}
-cluster_mrcas_depolytomied <- setdiff(cluster_mrcas, sub_mrcas)
 ```
 
-Get mugration outbreak clusters is a tabular format
+Get mugration imports in a per-sample tabular format
 ```{r}
-is_first <- T
-for (mrca in cluster_mrcas_depolytomied) {
-    descendant_idxs <- phytools::getDescendants(tree = mugration_phylo, node = mrca)
-    tip_idxs <- descendant_idxs[descendant_idxs <= length(mugration_phylo$tip.label)]
-    tip_names <- mugration_phylo$tip.label[tip_idxs]
-    res <- data.frame(
-        sample = tip_names,
-        introduction_node = paste(outbreak_annotation, "node", mrca, sep = "_"),
-        cluster_size = length(tip_names),
-        region = node_annotations[tip_idxs, 5])
-    if (is_first) {
-        mugration_results <- res
+# function to see if a node is the child of an introduction
+get_introduction <- function(node_idx, introduction_data) {
+    if (node_idx %in% introduction_data$child) {
+        return(node_idx)
     } else {
-        mugration_results <- rbind(mugration_results, res)
+        parent <- postorder_edges[which(postorder_edges[, 2] == node_idx), 1]
+        return(get_introduction(parent, introduction_data))
     }
 }
 
-# ggtree(mugration_treeio) + 
-#     geom_label(aes(label = division)) +
-#     geom_tiplab()
-# ggsave("~/Downloads/tree.png", width = 20, height = 20)    
+n_tips <- length(mugration_phylo$tip.label)
+is_first <- T
+for (i in 1:n_tips) {
+    sample_data_tmp <- data.frame(
+        sample = mugration_phylo$tip.label[i],
+        region = node_annotations[i, 5],
+        introduction_node = get_introduction(i, introduction_data))
+    if (is_first) {
+        sample_data <- sample_data_tmp
+        is_first <- F
+    } else {
+        sample_data <- rbind(sample_data, sample_data_tmp)
+    }
+}
+
+mugration_results <- sample_data %>%
+    group_by(introduction_node) %>%
+    mutate(cluster_size = n())
 ```
 
 Parse HIV-TRACE json output
-// TODO: these results only contain clusters > size 1, missing singletons
 ```{r}
 clusters_json <- readr::read_file(paste0(data_dir, "/hiv_trace/clusters.json"))
 clusters_list <- rjson::fromJSON(json_str = clusters_json)

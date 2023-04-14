@@ -1,0 +1,31 @@
+This script is to make figures showing the results.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggtree)
+
+# Load results
+boston_confa_results <- read.delim("nextflow/results/boston_confa/collated_results.txt", sep = " ")
+```
+
+Plot number of clusters by method
+```{r}
+boston_confa_clusters_by_method <- boston_confa_results %>%
+    filter(region == "CONF_A") %>%
+    group_by(method) %>%
+    summarise(n_samples = n(), n_clusters = length(unique(introduction_node)))
+
+ggplot(data = boston_confa_clusters_by_method) +
+    geom_col(aes(x = method, y = n_clusters))
+```
+
+TODO: how to visualize imports on tree and clusters?
+
+Bits and bobs, leftovers
+```{r}
+# ggtree(mugration_treeio) + 
+#     geom_label(aes(label = division)) +
+#     geom_tiplab()
+# ggsave("~/Downloads/tree.png", width = 20, height = 20)   
+```
