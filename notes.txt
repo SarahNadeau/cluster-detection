@@ -23,6 +23,7 @@ Caused by:
   status : 255
   message:
     [31mFATAL:   While making image from oci registry: failed to get checksum for docker://ubuntu:jammy: Error reading manifest jammy in docker.io/library/ubuntu: manifest unknown: OCI index found, but accept header does not support OCI indexes
+SOLVED: use apptainer instead of singularity on cluster
 
 DONE [hiv trace]: include context sequences or not in analysis? A: yes, good to see false positives for clustering
 DONE [hiv trace]: include singletons in results
