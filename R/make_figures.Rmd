@@ -5,8 +5,13 @@ library(tidyverse)
 library(ggplot2)
 library(ggtree)
 
-# Load results
+# Load collated results
 boston_confa_results <- read.delim("nextflow/results/boston_confa/collated_results.txt", sep = " ")
+
+# Load method-specific results
+mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
+node_annotations <- as.data.frame(as_tibble(mugration_treeio))
+mugration_phylo <- ape::as.phylo(mugration_treeio)
 ```
 
 Plot number of clusters by method
