@@ -15,5 +15,6 @@ nextflow \
     analyze_urmc_klebsiella.nf \
     -profile apptainer \
     -N snadeau@fredhutch.org \
+    -work-dir ./work_urmc \
     --input_fasta_dir '../clean_data/all_samples_for_analysis' \
     -resume
