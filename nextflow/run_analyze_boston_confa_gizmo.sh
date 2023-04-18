@@ -3,18 +3,15 @@
 
 set -euo pipefail
 
-# Nextflow Configuration File
-NXF_CONFIG=./nextflow.gizmo.config
-
 # Load modules (specific to rhino/gizmo)
 ml purge
-ml Nextflow/22.10.6  # TODO: apptainer requires a newer NF version
+ml nextflow/23.04.0
 ml Apptainer/1.1.6
 
 # Run the workflow
 nextflow \
     run \
-    -c $NXF_CONFIG \
+    -c nextflow.gizmo.config \
     analyze_boston_confa.nf \
     -profile apptainer \
     --context_group_by 'region' \
