@@ -3,7 +3,10 @@
 // Input & output data parameters
 params.input_fasta = "../clean_data/sars_cov_2_lemiux_boston/sars_cov_2_boston_confa_outbreak.fasta"  // unaligned focal sequences
 params.input_metadata = "../clean_data/sars_cov_2_lemiux_boston/sars_cov_2_boston_confa_outbreak_clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
+<<<<<<< HEAD
 params.input_metadata_nextstrain = "../clean_data/sars_cov_2_lemiux_boston/sars_cov_2_boston_confa_outbreak_nextstrain_metadata.txt"  // focal sequence metadata in nextstrain format (strain & location)
+=======
+>>>>>>> d7295d124a8d893ca0e4de9f98f7e5d9df2a9872
 params.trait_name = "division" // colname in metadata for trait to reconstruct
 params.output_folder = "results/boston_confa"  // where results files will be saved to
 
