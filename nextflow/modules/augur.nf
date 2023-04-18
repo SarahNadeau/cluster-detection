@@ -44,8 +44,8 @@ process get_proximities {
     shell:
         """
         set -eu
-        git clone https://github.com/nextstrain/ncov.git /ncov
-        /Python-3.8.0/python /ncov/scripts/get_distance_to_focal_set.py \
+        git clone https://github.com/nextstrain/ncov.git ./ncov
+        /Python-3.8.0/python ./ncov/scripts/get_distance_to_focal_set.py \
             --alignment !{context_alignment} \
             --focal-alignment !{focal_alignment} \
             --reference !{reference} \
@@ -73,13 +73,13 @@ process get_priorities {
     shell:
         """
         set -eu
-        git clone https://github.com/nextstrain/ncov.git /ncov
+        git clone https://github.com/nextstrain/ncov.git ./ncov
 
         augur index \
             --sequences !{context_alignment} \
             --output index.tsv
 
-        /Python-3.8.0/python /ncov/scripts/priorities.py \
+        /Python-3.8.0/python ./ncov/scripts/priorities.py \
             --sequence-index index.tsv \
             --proximities !{proximities} \
             --crowding-penalty 0 \
