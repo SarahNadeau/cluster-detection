@@ -1,4 +1,4 @@
-// This workflow is to analyze the Bonston confA outbreak dataset with several methods.
+// This workflow is to analyze the URMC K. aerogenes outbreak dataset with several methods.
 
 // Input & output data parameters
 params.input_fasta_dir = "../clean_data/klebsiella_malek_urmc/outbreak_samples_test"  // directory of *only* unaligned focal sequences

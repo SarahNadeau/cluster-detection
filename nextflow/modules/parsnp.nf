@@ -4,7 +4,7 @@ process get_snps_and_tree {
     publishDir(path: "${params.output_folder}/parsnp", mode: 'copy')
 
     cpus 4
-    memory "1 GB"
+    memory "5 GB"
 
     input:
         path input_fasta_dir
