@@ -1,7 +1,7 @@
 // This workflow is to analyze the URMC K. aerogenes outbreak dataset with several methods.
 
 // Input & output data parameters
-params.input_fasta_dir = "../clean_data/klebsiella_malek_urmc/outbreak_samples_test"  // directory of *only* unaligned focal sequences
+params.input_fasta_dir = "../clean_data/klebsiella_malek_urmc/all_samples_for_analysis"  // directory of *only* unaligned focal sequences
 params.input_metadata = "../clean_data/klebsiella_malek_urmc/klebsiella_urmc_outbreak_clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
 params.input_metadata_nextstrain = "../clean_data/klebsiella_malek_urmc/klebsiella_urmc_outbreak_nextstrain_metadata.txt"
 params.reference_fasta = "../clean_data/klebsiella_malek_urmc/reference_NC_015663v1.fna"

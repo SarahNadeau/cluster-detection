@@ -15,5 +15,4 @@ nextflow \
     analyze_urmc_klebsiella.nf \
     -profile apptainer \
     -work-dir ./work_urmc \
-    --input_fasta_dir ../clean_data/klebsiella_malek_urmc/all_samples_for_analysis \
     -resume
