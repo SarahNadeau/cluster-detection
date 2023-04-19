@@ -13,14 +13,26 @@ process download_nextstrain_covid_data {
         val region_name
 
     output:
-        path "metadata_${region_name}.tsv.xz", emit: metadata
+        path "metadata_${region_name}.tsv.*z", emit: metadata
         path "aligned_${region_name}.fasta.xz", emit: alignment
 
     shell:
         """
         set -eu
-        curl https://data.nextstrain.org/files/ncov/open/!{region_name}/metadata.tsv.xz -o metadata_!{region_name}.tsv.xz
+        # handle special case where only .gz format metadata available for all GenBank
+        if [[ !{region_name} == '.' ]]; then
+            curl https://data.nextstrain.org/files/ncov/open/!{region_name}/metadata.tsv.gz -o metadata_!{region_name}.tsv.gz
+        else
+            curl https://data.nextstrain.org/files/ncov/open/!{region_name}/metadata.tsv.xz -o metadata_!{region_name}.tsv.xz
+        fi
         curl https://data.nextstrain.org/files/ncov/open/!{region_name}/aligned.fasta.xz -o aligned_!{region_name}.fasta.xz
+        """
+
+    stub:
+        """
+        set -eu
+        cp ~/cluster-detection/nextflow/cached_results/boston_confa/metadata_..tsv.gz .
+        cp ~/cluster-detection/nextflow/cached_results/boston_confa/aligned_..fasta.xz .
         """
 }
 
@@ -51,6 +63,12 @@ process get_proximities {
             --reference !{reference} \
             --ignore-seqs !{reference_name} \
             --output proximities.tsv
+        """
+
+    stub:
+        """
+        set -eu
+        cp ~/cluster-detection/nextflow/cached_results/boston_confa/proximities.tsv .
         """
 }
 
@@ -84,6 +102,12 @@ process get_priorities {
             --proximities !{proximities} \
             --crowding-penalty 0 \
             --output priorities.tsv
+        """
+
+    stub:
+        """
+        set -eu
+        cp ~/cluster-detection/nextflow/cached_results/boston_confa/priorities.tsv .
         """
 }
 
