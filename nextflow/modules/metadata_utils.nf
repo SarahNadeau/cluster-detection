@@ -1,7 +1,7 @@
 // Get metadata (cols for strain, trait) from Nextstrain metadata
 process get_metadata_from_nextstrain {
     publishDir(path: "${params.output_folder}", mode: 'copy')
-    container 'bash:devel-alpine3.17'
+    container 'nextstrain/base:build-20230411T103027Z'  // use any old container with /bin/bash
 
     cpus 1
     memory "1 GB"
@@ -15,7 +15,6 @@ process get_metadata_from_nextstrain {
 
     shell:
         """
-        #!/usr/bin/env bash
         set -eu
 
         # Extract strain and division columns from nextstrain metadata (cols 8, 9, 10 are region, country, division respectively)
@@ -28,7 +27,7 @@ process get_metadata_from_nextstrain {
 // Concatenate nextstrain-formatted focal metadata with nextstrain context metadata
 process add_metadata_to_nextstrain {
     publishDir(path: "${params.output_folder}", mode: 'copy')
-    container 'bash:devel-alpine3.17'
+    container 'nextstrain/base:build-20230411T103027Z'
 
     cpus 1
     memory "1 GB"
@@ -42,7 +41,6 @@ process add_metadata_to_nextstrain {
 
     shell:
         """
-        #!/usr/bin/env bash
         set -eu
 
         # Extract strain, virus, date, region, country, division columns from nextstrain metadata (cols 8, 9 are region, country respectively)
