@@ -18,7 +18,7 @@ process get_metadata_from_nextstrain {
         set -eu
 
         # Extract strain and division columns from nextstrain metadata (cols 8, 9, 10 are region, country, division respectively)
-        awk -v OFS='\t' '{print \$1, \$10}' !{nextstrain_metadata} > metadata_from_nextstrain.tsv
+        awk -v OFS='\t' 'BEGIN {FS = "\t"} ; {print \$1, \$10}' !{nextstrain_metadata} > metadata_from_nextstrain.tsv
         # Concatenate context metadata with focal metadata
         awk '{print}' metadata_from_nextstrain.tsv !{focal_metadata} > metadata_with_context.tsv
         """
@@ -44,7 +44,7 @@ process add_metadata_to_nextstrain {
         set -eu
 
         # Extract strain, virus, date, region, country, division columns from nextstrain metadata (cols 8, 9 are region, country respectively)
-        awk -v OFS='\t' '{print \$1, \$2, \$7, \$8, \$9, \$10}' !{nextstrain_metadata} | tail -n +2 > metadata_from_nextstrain.tsv
+        awk -v OFS='\t' 'BEGIN {FS = "\t"} ; {print \$1, \$2, \$7, \$8, \$9, \$10}' !{nextstrain_metadata} | tail -n +2 > metadata_from_nextstrain.tsv
         # Concatenate context metadata with focal metadata
         awk '{print}' !{focal_metadata} metadata_from_nextstrain.tsv > nextstrain_metadata_with_context.tsv
         """
