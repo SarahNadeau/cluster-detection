@@ -1,0 +1,84 @@
+This script is to collate output files from different methods into a unified results files
+
+```{r}
+library(tidyverse)
+library(treeio)
+library(rjson)
+library(caper)
+library(ape)
+
+# Analysis-specific parameters
+outbreak_annotation <- "CONF_A"
+data_dir <- "nextflow/results/boston_confa_all_genbank_500_regions"
+full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
+outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
+```
+
+# Load tabular results files
+```{r}
+clustertracker_results <- read.delim(paste0(data_dir, "/clustertracker/introductions.tsv"))
+```
+
+Assume .nhx file has already been created (see collate_per_sample_results.Rmd)
+
+Get clusters from treetime mugration output
+```{r}
+mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree_mod.nhx"))
+node_annotations <- as.data.frame(as_tibble(mugration_treeio))
+mugration_phylo <- ape::as.phylo(mugration_treeio)
+
+# pre-order tree traversal to find outbreak MRCA nodes
+mugration_phylo <- ape::reorder.phylo(mugration_phylo, order = "postorder", index.only = F)
+postorder_edges <- mugration_phylo$edge
+
+# Traverse tree, finding import events
+is_first <- T
+for (i in nrow(postorder_edges):1) {
+    parent <- postorder_edges[i, 1]
+    child <- postorder_edges[i, 2]
+    parent_annotation <- node_annotations[parent, 5]
+    child_annotation <- node_annotations[child, 5]
+    if (is.na(parent_annotation) || child_annotation != parent_annotation) {
+        introduction_data_tmp <- data.frame(
+            parent = parent,
+            child = child,
+            parent_annotation = parent_annotation,
+            child_annotation = child_annotation
+        )
+        if (is_first) {
+            introduction_data <- introduction_data_tmp
+            is_first <- F
+        } else {
+            introduction_data <- rbind(introduction_data, introduction_data_tmp)
+        }
+    }  
+}
+
+# Get descendents of outbreak introductions
+outbreak_introductions <- introduction_data %>% filter(child_annotation == "CONF_A")
+is_first <- T
+for (node_idx in outbreak_introductions$child) {
+    descendent_data_tmp <- data.frame(
+        tip = caper::clade.members(x = node_idx, phy = mugration_phylo),
+        ancestor = node_idx,
+        method = "mugration")
+    if (is_first) {
+        descendent_data <- descendent_data_tmp
+        is_first <- F
+    } else {
+        descendent_data <- rbind(descendent_data, descendent_data_tmp)
+    }
+}
+mugration_descendent_data <- merge(
+    x = descendent_data, y = node_annotations %>% select(node, label, division),
+    by.x = "tip", by.y = "node",
+    all.x = T, all.y = F
+)
+```
+
+Get clusters from clustertracker output
+
+```{r}
+clustertracker_phylo <- ape::read.tree(paste0(data_dir, "/iqtree/tree.nwk"))
+print(clustertracker_phylo)
+```

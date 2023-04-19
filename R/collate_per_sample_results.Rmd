@@ -4,10 +4,11 @@ This script is to collate output files from different methods into a unified res
 library(tidyverse)
 library(treeio)
 library(rjson)
+library(ape)
 
 # Analysis-specific parameters
 outbreak_annotation <- "CONF_A"
-data_dir <- "nextflow/results/boston_confa"
+data_dir <- "nextflow/results/boston_confa_all_genbank_500_regions"
 full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
 outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
 ```
@@ -21,13 +22,15 @@ clustertracker_results <- read.delim(paste0(data_dir, "/clustertracker/introduct
 Convert timetree output to New Hampshire eXtended format
 ```{bash}
 cd nextflow/results/boston_confa/mugration/
-grep "^ Tree" annotated_tree.nexus | sed "s/ Tree tree1=//g" | sed "s/&/&&NHX:/g" > annotated_tree.nhx
+grep "^ Tree" annotated_tree.nexus | sed "s/ Tree tree1=//g" | sed "s/&/&&NHX:/g" > annotated_tree_tmp.nhx
+# Edge case: get rid of parentheses that mess up parsing
+sed "s/Georgia (Asia)/Georgia Asia/g" annotated_tree_tmp.nhx > annotated_tree.nhx
 cd ../../../../
 ```
 
 Get clusters from treetime mugration output
 ```{r}
-mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
+mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree_mod.nhx"))
 node_annotations <- as.data.frame(as_tibble(mugration_treeio))
 mugration_phylo <- ape::as.phylo(mugration_treeio)
 
@@ -129,18 +132,19 @@ full_results <- rbind(
     hivtrace_results %>% mutate(method = "hivtrace")
 )
 
-# TODO: parse mugration results to be per-sample for all samples, not just those under cluster introduction nodes
 full_results %>%
     group_by(method) %>%
     summarize(n_samples = n())
 
 # inspect results
-full_results %>%
+tmp <- full_results %>%
     group_by(method, introduction_node) %>%
     summarize(
         n_outbreak_samples = sum(region == outbreak_annotation),
         n_total_samples = n()) %>%
-    arrange(desc(n_outbreak_samples))
+    filter(n_outbreak_samples > 0) %>%
+    arrange(method, desc(n_outbreak_samples))
+print(tmp)
 
 # save results
 write.table(
