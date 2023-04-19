@@ -10,9 +10,8 @@ ml Apptainer/1.1.6
 # Run the workflow
 nextflow \
     run \
-    -c nextflow.gizmo.config \
+    -c ../nextflow.gizmo.config \
     -N snadeau@fredhutch.org \
     analyze_urmc_klebsiella.nf \
     -profile apptainer \
-    -work-dir ./work_urmc \
     -resume
