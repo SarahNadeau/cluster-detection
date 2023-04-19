@@ -6,7 +6,9 @@ library(ggplot2)
 library(ggtree)
 
 # Load collated results
-boston_confa_results <- read.delim("nextflow/results/boston_confa/collated_results.txt", sep = " ")
+data_dir <- "nextflow/results/boston_confa_all_genbank_500_regions"
+boston_confa_results <- read.delim(paste0(data_dir, "/collated_results.txt"), sep = " ") %>%
+    mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration")))
 
 # Load method-specific results
 mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
@@ -22,10 +24,16 @@ boston_confa_clusters_by_method <- boston_confa_results %>%
     summarise(n_samples = n(), n_clusters = length(unique(introduction_node)))
 
 ggplot(data = boston_confa_clusters_by_method) +
-    geom_col(aes(x = method, y = n_clusters))
+    geom_col(aes(x = method, y = n_clusters)) + 
+    theme_bw() + 
+    labs(x = "Method used", y = "Number of clusters identified")
+ggsave(file = paste0(data_dir, "/n_clusters_by_method.png"), width = 3, height = 3)
 ```
 
-TODO: how to visualize imports on tree and clusters?
+Plot size of sampled outbreak
+```{r}
+# For clustertracker, introduction 
+```
 
 Bits and bobs, leftovers
 ```{r}
