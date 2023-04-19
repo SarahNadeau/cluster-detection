@@ -108,7 +108,8 @@ process get_priorities {
         """
         set -eu
         cp ~/cluster-detection/nextflow/cached_results/boston_confa/priorities.tsv .
-        """
+        cp ~/cluster-detection/nextflow/cached_results/boston_confa/index.tsv .
+	"""
 }
 
 // Filter context sequence set based on region and genetic priorities
