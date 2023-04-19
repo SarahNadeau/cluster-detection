@@ -29,6 +29,11 @@ GCF_000215745.1_ASM21574v1_genomic.fna
 
 PRJNA504784
 * Genomic DNA assembly, downloaded from NCBI; the Klebsiella aerogenes outbreak samples sequenced in the publication. I moved the files to the clean_data directory.
+* In clean_data, I took the Genbank prefix out of the fasta headers using `for FILE in *.fna; do sed 's/>.*URMC/>URMC/g' $FILE > $FILE.noprefix; done`
 
 context_samples_110/
-* 110 context sequences from Malek et al. paper downloaded from Genbank (actually only 109 files, 1 not downloaded??)
+* 110 context sequences from Malek et al. paper downloaded from Genbank
+* In clean_data, I took the Genbank prefix out using `for FILE in *.fna; do sed 's/>.*aerogenes />/g' $FILE > $FILE.noprefix; done`
+
+aac.02577-18-sd006.xlsx
+* metadata for the 110 context sequences used in Malek et al.
