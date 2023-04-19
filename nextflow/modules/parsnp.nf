@@ -25,4 +25,11 @@ process get_snps_and_tree {
         # Extract SNP alignment from harvest file
         harvesttools -i parsnp/parsnp.ggr -S snp_alignment.fasta
         """
+
+    stub:
+        """
+        mkdir parsnp
+        cp ~/cluster-detection/nextflow/cached_results/klebsiella_urmc/parsnp/* parsnp/
+        cp ~/cluster-detection/nextflow/cached_results/klebsiella_urmc/snp_alignment.fasta .
+        """
 }
