@@ -20,7 +20,9 @@ process get_metadata_from_nextstrain {
         # Extract strain and division columns from nextstrain metadata (cols 8, 9, 10 are region, country, division respectively)
         awk -v OFS='\t' 'BEGIN {FS = "\t"} ; {print \$1, \$10}' !{nextstrain_metadata} > metadata_from_nextstrain.tsv
         # Concatenate context metadata with focal metadata
-        awk '{print}' metadata_from_nextstrain.tsv !{focal_metadata} > metadata_with_context.tsv
+        awk '{print}' metadata_from_nextstrain.tsv !{focal_metadata} > metadata_with_context_tmp.tsv
+        # Remove any parentheses that will mess up tree file parsing
+        sed 's/[()]//g' metadata_with_context_tmp.tsv > metadata_with_context.tsv
         """
 }
 
@@ -46,6 +48,8 @@ process add_metadata_to_nextstrain {
         # Extract strain, virus, date, region, country, division columns from nextstrain metadata (cols 8, 9 are region, country respectively)
         awk -v OFS='\t' 'BEGIN {FS = "\t"} ; {print \$1, \$2, \$7, \$8, \$9, \$10}' !{nextstrain_metadata} | tail -n +2 > metadata_from_nextstrain.tsv
         # Concatenate context metadata with focal metadata
-        awk '{print}' !{focal_metadata} metadata_from_nextstrain.tsv > nextstrain_metadata_with_context.tsv
+        awk '{print}' !{focal_metadata} metadata_from_nextstrain.tsv > nextstrain_metadata_with_context_tmp.tsv
+        # Remove any parentheses that will mess up tree file parsing
+        sed 's/[()]//g' nextstrain_metadata_with_context_tmp.tsv > nextstrain_metadata_with_context.tsv
         """
 }

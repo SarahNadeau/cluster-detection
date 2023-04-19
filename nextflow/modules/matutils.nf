@@ -83,11 +83,12 @@ process matutils_introduce {
 
     output:
         path "introductions.tsv", emit: introductions_tsv
+        path "clusters.tsv"
 
     shell:
         """
         set -eu
-        matUtils introduce --threads 2 -i !{pb} -s !{metadata} -o "introductions.tsv"
+        matUtils introduce --threads 2 -i !{pb} -s !{metadata} -o "introductions.tsv" --cluster-output "clusters.tsv"
         """
 }
 
