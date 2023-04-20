@@ -125,10 +125,8 @@ process augur_filter {
         path context_alignment
         path priorities
         path index
-        val min_sequence_length
-        val query
-        val group_by
-        val max_context_sequences
+        val use_priorities
+        val other_params
 
     output:
         path "filtered_context_by_${group_by}.fasta", emit: filtered_context
@@ -137,17 +135,27 @@ process augur_filter {
     shell:
         """
         set -eu
-        augur filter \
-            --metadata !{metadata} \
-            --sequences !{context_alignment} \
-            --query "!{query}" \
-            --priority !{priorities} \
-            --sequence-index !{index} \
-            --min-length !{min_sequence_length} \
-            --group-by !{group_by} \
-            --subsample-max-sequences !{max_context_sequences} \
-            --output filtered_context_by_!{group_by}.fasta \
-            --output-metadata filtered_context_metadata_by_!{group_by}.tsv
+        # handle priorities or no priorities
+        if [[ !{use_priorities} == 'true' ]]; then
+            echo "using Nextstrain priorities"
+            augur filter \
+                --metadata !{metadata} \
+                --sequences !{context_alignment} \
+                --sequence-index !{index} \
+                --priority !{priorities} \
+                !{other_params} \
+                --output filtered_context_by_!{group_by}.fasta \
+                --output-metadata filtered_context_metadata_by_!{group_by}.tsv
+        else
+            echo "not using Nextstrain priorities"
+            augur filter \
+                --metadata !{metadata} \
+                --sequences !{context_alignment} \
+                --sequence-index !{index} \
+                !{other_params} \
+                --output filtered_context_by_!{group_by}.fasta \
+                --output-metadata filtered_context_metadata_by_!{group_by}.tsv
+        fi
         """
 }
 
@@ -167,6 +175,7 @@ process augur_aggregate {
         """
         awk '{print}' !{focal_alignment} filtered_context*.fasta > alignment_plus_filtered_context.fasta
         awk '{print}' filtered_context_metadata*.tsv > filtered_context_metadata.tsv
+        echo "stopping here!"; exit 1
         """
 }
 

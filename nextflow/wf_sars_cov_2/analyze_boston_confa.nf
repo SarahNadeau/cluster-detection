@@ -11,10 +11,6 @@ params.output_folder = "../results/boston_confa_$workflow.start"  // where resul
 params.context_region_name = "north-america"  // draw context set from ~4000 Nextstrain-curated north america sequences
 params.reference_fasta = "../../clean_data/sars_cov_2_lemiux_boston/reference_NC_045512v2.fa"  // SARS-CoV-2 reference genome
 params.reference_name  = "NC_045512v2"  // name of reference sequence to ignore for priority calculation
-params.min_sequence_length = 20000  // minimum length of context sequences
-params.context_group_by = "'year', 'month', 'division'"  // Nextstrain augur filter group by specification for context set (in the US divisions are states)
-params.max_context_sequences_divisions = 1000 // maximum overall number of sequences (will sample probabalistically from groups)
-params.max_context_sequences_countries = 1000 // maximum overall number of sequences (will sample probabalistically from groups)
 
 // Tree-building parameters
 params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as outgroup
@@ -26,7 +22,7 @@ params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must over
 
 // Import processes from modules
 include { download_nextstrain_covid_data; get_proximities; get_priorities; run_nextstrain_all } from '../modules/augur.nf'
-include { augur_filter as filter_divisions; augur_filter as filter_countries; augur_aggregate } from '../modules/augur.nf'
+include { augur_filter as filter_1; augur_filter as filter_2; augur_aggregate } from '../modules/augur.nf'
 include { build_tree } from '../modules/iqtree.nf'
 include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce; pb_to_taxonium } from '../modules/matutils.nf'
 include { get_metadata_from_nextstrain; add_metadata_to_nextstrain } from '../modules/metadata_utils.nf'
@@ -55,28 +51,25 @@ workflow {
     get_priorities(
         download_nextstrain_covid_data.out.alignment, 
         proximities)
-    filter_divisions(
+    filter_1(
         download_nextstrain_covid_data.out.metadata,
         download_nextstrain_covid_data.out.alignment,
         get_priorities.out.priorities, 
         get_priorities.out.index,
-        params.min_sequence_length,
-        Channel.value("region == 'North America'"),
-        Channel.value('division'),
+        Channel.value("true"),
+        Channel.value("--min-length 20000"),
         params.max_context_sequences_divisions)
-    filter_countries(
+    filter_2(
         download_nextstrain_covid_data.out.metadata,
         download_nextstrain_covid_data.out.alignment,
         get_priorities.out.priorities, 
         get_priorities.out.index,
-        params.min_sequence_length,
-        Channel.value("region != 'North America'"),
-        Channel.value('country'),
-        params.max_context_sequences_countries)
+        Channel.value("false"),
+        Channel.value("--min-length 20000 --group-by region year month --subsample-max-sequences 200"))
     augur_aggregate(
         focal_alignment,
-        filter_divisions.out.filtered_context.concat(filter_countries.out.filtered_context),
-        filter_divisions.out.filtered_context_metadata.concat(filter_countries.out.filtered_context_metadata))
+        filter_1.out.filtered_context.concat(filter_2.out.filtered_context),
+        filter_1.out.filtered_context_metadata.concat(filter_2.out.filtered_context_metadata))
 
     // Get clustertracker metadata
     full_metadata = get_metadata_from_nextstrain(
