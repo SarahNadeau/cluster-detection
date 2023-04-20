@@ -59,6 +59,7 @@ workflow {
     run_nextstrain_all_vcf(
         input_metadata_nextstrain,
         get_snps_and_tree.out.vcf,
-	reference_fasta)
+	    reference_fasta,
+        params.trait_name)
 
 }

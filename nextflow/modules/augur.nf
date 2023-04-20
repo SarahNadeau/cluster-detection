@@ -181,7 +181,8 @@ process run_nextstrain_all_vcf {
     input: 
         path metadata
         path alignment
-	path reference
+	    path reference
+        val trait_name
 
     output:
         path "auspice.json", emit: auspice_json
@@ -204,7 +205,7 @@ process run_nextstrain_all_vcf {
         augur refine \
             --tree tree_raw.nwk \
             --alignment !{alignment} \
-	    --vcf-reference !{reference} \
+	        --vcf-reference !{reference} \
             --metadata !{metadata} \
             --output-tree tree.nwk \
             --output-node-data branch_lengths.json \
@@ -217,7 +218,7 @@ process run_nextstrain_all_vcf {
             --tree tree.nwk \
             --metadata !{metadata} \
             --output-node-data traits.json \
-            --columns region country \
+            --columns region country !{trait_name} \
             --confidence
 
         # skipping reconstruction of nucleotide and amino acid mutations
@@ -227,7 +228,7 @@ process run_nextstrain_all_vcf {
             --metadata !{metadata} \
             --node-data branch_lengths.json \
                         traits.json \
-            --color-by-metadata region country \
+            --color-by-metadata region country !{trait_name} \
             --output auspice.json
         """
 }
@@ -242,6 +243,7 @@ process run_nextstrain_all {
     input:
         path metadata
         path alignment
+        val trait_name
 
     output:
         path "auspice.json", emit: auspice_json
@@ -275,7 +277,7 @@ process run_nextstrain_all {
             --tree tree.nwk \
             --metadata !{metadata} \
             --output-node-data traits.json \
-            --columns region country \
+            --columns region country !{trait_name} \
             --confidence
 
         # skipping reconstruction of nucleotide and amino acid mutations
@@ -285,7 +287,7 @@ process run_nextstrain_all {
             --metadata !{metadata} \
             --node-data branch_lengths.json \
                         traits.json \
-            --color-by-metadata region country \
+            --color-by-metadata region country !{trait_name} \
             --output auspice.json
         """
 }

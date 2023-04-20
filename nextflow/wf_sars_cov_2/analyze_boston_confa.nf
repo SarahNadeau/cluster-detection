@@ -116,7 +116,8 @@ workflow {
         input_metadata_nextstrain)
     run_nextstrain_all(
         full_metadata_nextstrain,
-        augur_aggregate.out.alignment_plus_filtered_context)
+        augur_aggregate.out.alignment_plus_filtered_context,
+        params.trait_name)
 
     // TODO: run BEAST1 DTA to estiamte ancestral locations
 
