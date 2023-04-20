@@ -8,8 +8,11 @@ ml purge
 ml nextflow/23.04.0
 ml Apptainer/1.1.6
 
+# Up the recursion limit for augur for big tree
+export AUGUR_RECURSION_LIMIT=10000
+
 # Run the workflow
-# echo "WARNING: stub-run is on!"
+echo "WARNING: stub-run is on!"
 nextflow \
     run \
     -c ../nextflow.gizmo.notower.config \
@@ -17,4 +20,6 @@ nextflow \
     analyze_boston_confa.nf \
     -profile apptainer \
     --context_region_name '.' \
-    -resume 
+    -resume \
+    -stub-run \
+    -with-trace
