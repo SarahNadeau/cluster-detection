@@ -61,7 +61,7 @@ workflow {
         get_priorities.out.priorities, 
         get_priorities.out.index,
         params.min_sequence_length,
-        Channel.value("region == 'North America'")
+        Channel.value("region == 'North America'"),
         Channel.value('division'),
         params.max_context_sequences_divisions)
     filter_countries(
@@ -70,7 +70,7 @@ workflow {
         get_priorities.out.priorities, 
         get_priorities.out.index,
         params.min_sequence_length,
-        Channel.value("region != 'North America'")
+        Channel.value("region != 'North America'"),
         Channel.value('country'),
         params.max_context_sequences_countries)
     augur_aggregate(
