@@ -8,7 +8,10 @@ clean_data/
 .nextflow/
 work/
 
-# data files
+# notes
+notes.txt
+
+# large data files
 raw_data/
 clean_data/
 

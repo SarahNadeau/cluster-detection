@@ -1,15 +1,15 @@
 // This workflow is to analyze the Bonston confA outbreak dataset with several methods.
 
 // Input & output data parameters
-params.input_fasta = "../clean_data/sars_cov_2_lemiux_boston/sars_cov_2_boston_confa_outbreak.fasta"  // unaligned focal sequences
-params.input_metadata = "../clean_data/sars_cov_2_lemiux_boston/sars_cov_2_boston_confa_outbreak_clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
-params.input_metadata_nextstrain = "../clean_data/sars_cov_2_lemiux_boston/sars_cov_2_boston_confa_outbreak_nextstrain_metadata.txt"  // focal sequence metadata in nextstrain format (strain & location)
+params.input_fasta = "../../clean_data/sars_cov_2_lemiux_boston/outbreak_samples_confa.fasta"  // unaligned focal sequences
+params.input_metadata = "../../clean_data/sars_cov_2_lemiux_boston/clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
+params.input_metadata_nextstrain = "../../clean_data/sars_cov_2_lemiux_boston/nextstrain_metadata.txt"  // focal sequence metadata in nextstrain format (strain & location)
 params.trait_name = "division" // colname in metadata for trait to reconstruct
-params.output_folder = "results/boston_confa"  // where results files will be saved to
+params.output_folder = "../results/boston_confa"  // where results files will be saved to
 
 // Context data parameters
 params.context_region_name = "north-america"  // draw context set from ~4000 Nextstrain-curated north america sequences
-params.reference_fasta = "../clean_data/sars_cov_2_lemiux_boston/reference_NC_045512v2.fa"  // SARS-CoV-2 reference genome
+params.reference_fasta = "../../clean_data/sars_cov_2_lemiux_boston/reference_NC_045512v2.fa"  // SARS-CoV-2 reference genome
 params.reference_name  = "NC_045512v2"  // name of reference sequence to ignore for priority calculation
 params.min_sequence_length = 20000  // minimum length of context sequences
 params.context_group_by = "'year', 'month', 'division'"  // Nextstrain augur filter group by specification for context set (in the US divisions are states)
@@ -19,19 +19,19 @@ params.max_context_sequences = 500 // maximum overall number of sequences (will 
 params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as outgroup
 
 // Method-specific parameters
-params.mask_sites_vcf = "../clean_data/sars_cov_2_lemiux_boston/problematic_sites_sarsCov2.vcf" // vcf file of problematic sites to mask
+params.mask_sites_vcf = "../../clean_data/sars_cov_2_lemiux_boston/problematic_sites_sarsCov2.vcf" // vcf file of problematic sites to mask
 params.tn93_distance_threshold = 0.0000667 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site)
 params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
 params.clustertracker_key_colname = "sample" // column name in clustertracker metadata
 params.clustertracker_metadata_colnames = "introduction_node,introduction_rank,growth_score,cluster_size,intro_confidence,parent_confidence,region,origins,origins_confidence,mutation_path"  // column names from clustertracker metadata to include in taxonium file
 
 // Import processes from modules
-include { download_nextstrain_covid_data; get_proximities; get_priorities; augur_filter; run_nextstrain_all } from './modules/augur.nf'
-include { build_tree } from './modules/iqtree.nf'
-include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce; pb_to_taxonium } from './modules/matutils.nf'
-include { get_metadata_from_nextstrain; add_metadata_to_nextstrain } from './modules/metadata_utils.nf'
-include { treetime_mugration } from './modules/treetime.nf'
-include { hiv_trace } from './modules/hiv_trace.nf'
+include { download_nextstrain_covid_data; get_proximities; get_priorities; augur_filter; run_nextstrain_all } from '../modules/augur.nf'
+include { build_tree } from '../modules/iqtree.nf'
+include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce; pb_to_taxonium } from '../modules/matutils.nf'
+include { get_metadata_from_nextstrain; add_metadata_to_nextstrain } from '../modules/metadata_utils.nf'
+include { treetime_mugration } from '../modules/treetime.nf'
+include { hiv_trace } from '../modules/hiv_trace.nf'
 
 // The workflow itself
 workflow {
