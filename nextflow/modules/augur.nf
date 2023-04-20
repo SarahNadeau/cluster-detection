@@ -140,7 +140,7 @@ process augur_filter {
         augur filter \
             --metadata !{metadata} \
             --sequences !{context_alignment} \
-            --query !{query} \
+            --query "!{query}" \
             --priority !{priorities} \
             --sequence-index !{index} \
             --min-length !{min_sequence_length} \
@@ -171,7 +171,7 @@ process augur_aggregate {
 }
 
 // run the whole nextstrain workflow *after filtering*, including export to auspice for visualization
-process run_nextstrain_all {
+process run_nextstrain_all_vcf {
     container 'nextstrain/base:build-20230411T103027Z'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
@@ -179,6 +179,67 @@ process run_nextstrain_all {
     memory "1 GB"
 
     input: 
+        path metadata
+        path alignment
+	path reference
+
+    output:
+        path "auspice.json", emit: auspice_json
+        path "tree_raw.nwk"
+        path "tree.nwk"
+
+    shell:
+        """
+        set -eu
+        
+        augur index \
+            --sequences !{alignment} \
+            --output sequence_index.tsv
+
+        augur tree \
+            --alignment !{alignment} \
+	    --vcf-reference !{reference} \
+            --output tree_raw.nwk
+
+        augur refine \
+            --tree tree_raw.nwk \
+            --alignment !{alignment} \
+	    --vcf-reference !{reference} \
+            --metadata !{metadata} \
+            --output-tree tree.nwk \
+            --output-node-data branch_lengths.json \
+            --timetree \
+            --coalescent opt \
+            --date-confidence \
+            --date-inference marginal
+
+        augur traits \
+            --tree tree.nwk \
+            --metadata !{metadata} \
+            --output-node-data traits.json \
+            --columns region country \
+            --confidence
+
+        # skipping reconstruction of nucleotide and amino acid mutations
+
+        augur export v2 \
+            --tree tree.nwk \
+            --metadata !{metadata} \
+            --node-data branch_lengths.json \
+                        traits.json \
+            --color-by-metadata region country \
+            --output auspice.json
+        """
+}
+
+process run_nextstrain_all {
+    container 'nextstrain/base:build-20230411T103027Z'
+    publishDir(path: "${params.output_folder}/augur", mode: 'copy')
+
+    cpus 2
+    memory "1 GB"
+
+    input:
         path metadata
         path alignment
 
@@ -190,7 +251,7 @@ process run_nextstrain_all {
     shell:
         """
         set -eu
-        
+
         augur index \
             --sequences !{alignment} \
             --output sequence_index.tsv

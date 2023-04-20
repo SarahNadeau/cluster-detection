@@ -5,12 +5,12 @@ params.input_fasta_dir = "../../clean_data/klebsiella_malek_urmc/all_samples_for
 params.input_metadata = "../../clean_data/klebsiella_malek_urmc/clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
 params.input_metadata_nextstrain = "../../clean_data/klebsiella_malek_urmc/nextstrain_metadata.csv"
 params.reference_fasta = "../../clean_data/klebsiella_malek_urmc/reference_NC_015663v1.fna"
-params.trait_name = "division" // colname in metadata for trait to reconstruct
+params.trait_name = "location" // colname in metadata for trait to reconstruct
 params.output_folder = "../results/urmc_klebsiella"  // where results files will be saved to
 
 // Method-specific parameters
 // NOTE: parsnp outputs SNP alignment, so the distance threshold (0.5% based on ad-hoc lit search) was corrected for approximate core-genome alignment length (4540000) and approximate SNP alignment length (86983) based on a test run
-params.tn93_distance_threshold = 0.26 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site) 
+params.tn93_distance_threshold = 0.1 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site) 
 params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
 
 // Import processes from modules
@@ -19,7 +19,7 @@ include { save_metadata } from '../modules/metadata_utils.nf'
 include { build_mat; matutils_introduce; pb_to_taxonium } from '../modules/matutils.nf'
 include { treetime_mugration } from '../modules/treetime.nf'
 include { hiv_trace} from '../modules/hiv_trace.nf'
-include { run_nextstrain_all } from '../modules/augur.nf'
+include { run_nextstrain_all_vcf } from '../modules/augur.nf'
 
 // The workflow itself
 workflow {
@@ -56,8 +56,9 @@ workflow {
         params.hiv_trace_min_overlap)
 
     // Run nextstrain mugration in the context of a nextstrain workflow
-    run_nextstrain_all(
+    run_nextstrain_all_vcf(
         input_metadata_nextstrain,
-        get_snps_and_tree.out.vcf)
+        get_snps_and_tree.out.vcf,
+	reference_fasta)
 
 }
