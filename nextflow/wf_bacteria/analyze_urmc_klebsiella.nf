@@ -2,8 +2,8 @@
 
 // Input & output data parameters
 params.input_fasta_dir = "../../clean_data/klebsiella_malek_urmc/all_samples_for_analysis"  // directory of *only* unaligned focal sequences
-params.input_metadata = "../../clean_data/klebsiella_malek_urmc/klebsiella_urmc_outbreak_clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
-params.input_metadata_nextstrain = "../../clean_data/klebsiella_malek_urmc/klebsiella_urmc_outbreak_nextstrain_metadata.csv"
+params.input_metadata = "../../clean_data/klebsiella_malek_urmc/clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
+params.input_metadata_nextstrain = "../../clean_data/klebsiella_malek_urmc/nextstrain_metadata.csv"
 params.reference_fasta = "../../clean_data/klebsiella_malek_urmc/reference_NC_015663v1.fna"
 params.trait_name = "division" // colname in metadata for trait to reconstruct
 params.output_folder = "../results/urmc_klebsiella"  // where results files will be saved to
@@ -15,6 +15,7 @@ params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must over
 
 // Import processes from modules
 include { get_snps_and_tree } from '../modules/parsnp.nf'
+include { save_metadata } from '../modules/metadata_utils.nf'
 include { build_mat; matutils_introduce } from '../modules/matutils.nf'
 include { treetime_mugration } from '../modules/treetime.nf'
 include { hiv_trace} from '../modules/hiv_trace.nf'
@@ -30,9 +31,15 @@ workflow {
     // Align focal sequences, get SNP alignment in fasta & VCF, phylogeny
     get_snps_and_tree(input_fasta_dir, reference_fasta)
 
+    // Save metadata
+    save_metadata(input_metadata_nextstrain)
+
     // Run clustertracker to estimate introductions
     mat_pb = build_mat(get_snps_and_tree.out.vcf, get_snps_and_tree.out.tree)
     matutils_introduce(mat_pb, input_metadata)
+    pb_to_taxonium(
+        mat_pb, 
+        matutils_introduce.out.introductions_tsv)
 
     // Run nextstrain mugration to estimate ancestral locations
     treetime_mugration(
@@ -46,5 +53,10 @@ workflow {
         reference_fasta,
         params.tn93_distance_threshold,
         params.hiv_trace_min_overlap)
+
+    // Run nextstrain mugration in the context of a nextstrain workflow
+    run_nextstrain_all(
+        input_metadata_nextstrain,
+        get_snps_and_tree.out.vcf)
 
 }

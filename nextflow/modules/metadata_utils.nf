@@ -53,3 +53,19 @@ process add_metadata_to_nextstrain {
         sed 's/[()]//g' nextstrain_metadata_with_context_tmp.tsv > nextstrain_metadata_with_context.tsv
         """
 }
+
+// Copy metadata to results folder
+process save_metadata {
+    publishDir(path: "${params.output_folder}", mode: 'copy')
+    
+    input:
+        path metadata
+
+    output:
+        path ${metadata}
+
+    shell:
+        """
+        echo "Copying metadata to results directory"
+        """
+}

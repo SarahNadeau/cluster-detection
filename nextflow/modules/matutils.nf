@@ -110,8 +110,6 @@ process pb_to_taxonium {
     input:
         path pb
         path metadata
-        val key_colname
-        val metadata_colnames
 
     output:
         path "taxonium.jsonl.gz"
@@ -123,7 +121,7 @@ process pb_to_taxonium {
             --input !{pb} \
             --output taxonium.jsonl.gz \
             --metadata !{metadata} \
-            --key_column !{key_colname} \
-            --columns !{metadata_colnames}
+            --key_column "sample" \
+            --columns "introduction_node,introduction_rank,growth_score,cluster_size,intro_confidence,parent_confidence,region,origins,origins_confidence,mutation_path"
         """
 }

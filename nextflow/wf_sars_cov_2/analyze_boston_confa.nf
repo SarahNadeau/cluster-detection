@@ -22,8 +22,6 @@ params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as o
 params.mask_sites_vcf = "../../clean_data/sars_cov_2_lemiux_boston/problematic_sites_sarsCov2.vcf" // vcf file of problematic sites to mask
 params.tn93_distance_threshold = 0.0000667 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site)
 params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
-params.clustertracker_key_colname = "sample" // column name in clustertracker metadata
-params.clustertracker_metadata_colnames = "introduction_node,introduction_rank,growth_score,cluster_size,intro_confidence,parent_confidence,region,origins,origins_confidence,mutation_path"  // column names from clustertracker metadata to include in taxonium file
 
 // Import processes from modules
 include { download_nextstrain_covid_data; get_proximities; get_priorities; augur_filter; run_nextstrain_all } from '../modules/augur.nf'
@@ -82,9 +80,7 @@ workflow {
     matutils_introduce(mat_pb, full_metadata)
     pb_to_taxonium(
         mat_pb, 
-        matutils_introduce.out.introductions_tsv, 
-        params.clustertracker_key_colname,
-        params.clustertracker_metadata_colnames)
+        matutils_introduce.out.introductions_tsv)
 
     // Run nextstrain mugration to estimate ancestral locations
     treetime_mugration(
