@@ -123,7 +123,6 @@ process augur_filter {
     input: 
         path metadata
         path context_alignment
-        path focal_alignment
         path priorities
         path index
         val min_sequence_length
@@ -131,8 +130,8 @@ process augur_filter {
         val max_context_sequences
 
     output:
-        path "alignment_plus_filtered_context.fasta", emit: alignment_plus_filtered_context
-        path "filtered_context_metadata.tsv", emit: filtered_context_metadata
+        path "filtered_context_by_${group_by}.fasta", emit: filtered_context
+        path "filtered_context_metadata_by_${group_by}.tsv", emit: filtered_context_metadata
 
     shell:
         """
@@ -145,9 +144,27 @@ process augur_filter {
             --min-length !{min_sequence_length} \
             --group-by !{group_by} \
             --subsample-max-sequences !{max_context_sequences} \
-            --output filtered_context.fasta \
-            --output-metadata filtered_context_metadata.tsv
-        awk '{print}' !{focal_alignment} filtered_context.fasta > alignment_plus_filtered_context.fasta
+            --output filtered_context_by_!{group_by}.fasta \
+            --output-metadata filtered_context_metadata_by_!{group_by}.tsv
+        """
+}
+
+// Aggregate focal alignment and filtered context to a final alignment
+process augur_aggregate {
+
+    input:
+        path focal_alignment
+        path 'filtered_context?.fasta'
+        path 'filtered_context_metadata?.tsv'
+
+    output:
+        path "alignment_plus_filtered_context.fasta", emit: alignment_plus_filtered_context
+        path "filtered_context_metadata.tsv", emit: filtered_context_metadata
+
+    shell:
+        """
+        awk '{print}' !{focal_alignment} filtered_context*.fasta > alignment_plus_filtered_context.fasta
+        awk '{print}' filtered_context_metadata*.tsv > filtered_context_metadata.tsv
         """
 }
 
