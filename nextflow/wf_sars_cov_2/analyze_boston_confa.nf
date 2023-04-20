@@ -57,8 +57,7 @@ workflow {
         get_priorities.out.priorities, 
         get_priorities.out.index,
         Channel.value("true"),
-        Channel.value("--min-length 20000"),
-        params.max_context_sequences_divisions)
+        Channel.value("--min-length 20000"))
     filter_2(
         download_nextstrain_covid_data.out.metadata,
         download_nextstrain_covid_data.out.alignment,

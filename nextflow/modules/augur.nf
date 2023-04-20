@@ -129,8 +129,8 @@ process augur_filter {
         val other_params
 
     output:
-        path "filtered_context_by_${group_by}.fasta", emit: filtered_context
-        path "filtered_context_metadata_by_${group_by}.tsv", emit: filtered_context_metadata
+        path "filtered_context.fasta", emit: filtered_context
+        path "filtered_context_metadata.tsv", emit: filtered_context_metadata
 
     shell:
         """
@@ -144,8 +144,8 @@ process augur_filter {
                 --sequence-index !{index} \
                 --priority !{priorities} \
                 !{other_params} \
-                --output filtered_context_by_!{group_by}.fasta \
-                --output-metadata filtered_context_metadata_by_!{group_by}.tsv
+                --output filtered_context.fasta \
+                --output-metadata filtered_context_metadata.tsv
         else
             echo "not using Nextstrain priorities"
             augur filter \
@@ -153,8 +153,8 @@ process augur_filter {
                 --sequences !{context_alignment} \
                 --sequence-index !{index} \
                 !{other_params} \
-                --output filtered_context_by_!{group_by}.fasta \
-                --output-metadata filtered_context_metadata_by_!{group_by}.tsv
+                --output filtered_context.fasta \
+                --output-metadata filtered_context_metadata.tsv
         fi
         """
 }
