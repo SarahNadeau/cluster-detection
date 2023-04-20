@@ -31,6 +31,6 @@ These depend on the outbreak scenario and can be:
 `*_nextstrain_metadata.txt` looks like:
 | strain | virus | date | region | country | division |
 | --- | --- | --- | --- | --- | --- |
-| NC_045512v2 | ncov | 12/22/19 | REFERENCE | China | ? |
-| MT520428.1 | ncov | 3/7/20 | CONF_A | USA | Massachusetts |
-| MT520429.1 | ncov | 3/8/20 | CONF_A | USA | Massachusetts |
+| NC_045512v2 | ncov | 2019-12-22 | REFERENCE | China | ? |
+| MT520428.1 | ncov | 2020-03-07 | CONF_A | USA | Massachusetts |
+| MT520429.1 | ncov | 2020-03-08 | CONF_A | USA | Massachusetts |
