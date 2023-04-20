@@ -62,7 +62,7 @@ process save_metadata {
         path metadata
 
     output:
-        path ${metadata}
+        path "${metadata}"
 
     shell:
         """

@@ -26,7 +26,7 @@ params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must over
 
 // Import processes from modules
 include { download_nextstrain_covid_data; get_proximities; get_priorities; run_nextstrain_all } from '../modules/augur.nf'
-include { augur_filter as filter_divisions; augur_filter as filter_countries } from '../modules/augur.nf'
+include { augur_filter as filter_divisions; augur_filter as filter_countries; augur_aggregate } from '../modules/augur.nf'
 include { build_tree } from '../modules/iqtree.nf'
 include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce; pb_to_taxonium } from '../modules/matutils.nf'
 include { get_metadata_from_nextstrain; add_metadata_to_nextstrain } from '../modules/metadata_utils.nf'

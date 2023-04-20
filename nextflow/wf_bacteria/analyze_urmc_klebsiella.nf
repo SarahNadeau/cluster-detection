@@ -16,9 +16,10 @@ params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must over
 // Import processes from modules
 include { get_snps_and_tree } from '../modules/parsnp.nf'
 include { save_metadata } from '../modules/metadata_utils.nf'
-include { build_mat; matutils_introduce } from '../modules/matutils.nf'
+include { build_mat; matutils_introduce; pb_to_taxonium } from '../modules/matutils.nf'
 include { treetime_mugration } from '../modules/treetime.nf'
 include { hiv_trace} from '../modules/hiv_trace.nf'
+include { run_nextstrain_all } from '../modules/augur.nf'
 
 // The workflow itself
 workflow {
