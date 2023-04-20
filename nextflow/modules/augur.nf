@@ -126,6 +126,7 @@ process augur_filter {
         path priorities
         path index
         val min_sequence_length
+        val query
         val group_by
         val max_context_sequences
 
@@ -139,6 +140,7 @@ process augur_filter {
         augur filter \
             --metadata !{metadata} \
             --sequences !{context_alignment} \
+            --query !{query} \
             --priority !{priorities} \
             --sequence-index !{index} \
             --min-length !{min_sequence_length} \
