@@ -73,8 +73,8 @@ workflow {
         params.max_context_sequences_countries)
     augur_aggregate(
         focal_alignment,
-        [filter_divisions.out.filtered_context, filter_countries.out.filtered_context],
-        [filter_divisions.out.filtered_context_metadata, filter_countries.out.filtered_context_metadata])
+        filter_divisions.out.filtered_context.concat(filter_countries.out.filtered_context),
+        filter_divisions.out.filtered_context_metadata.concat(filter_countries.out.filtered_context_metadata))
 
     // Get clustertracker metadata
     full_metadata = get_metadata_from_nextstrain(
