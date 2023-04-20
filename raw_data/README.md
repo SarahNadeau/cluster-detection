@@ -37,3 +37,7 @@ context_samples_110/
 
 aac.02577-18-sd006.xlsx
 * metadata for the 110 context sequences used in Malek et al.
+
+klebsiella_file_to_sample_name_mapping.txt
+* hand-made in excel based on the other metadata files
+* relevant for ParSNP, which names taxa by filename
