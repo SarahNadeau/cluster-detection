@@ -27,10 +27,12 @@ SOLVED: use apptainer instead of singularity on cluster
 
 DONE [hiv trace]: include context sequences or not in analysis? A: yes, good to see false positives for clustering
 DONE [hiv trace]: include singletons in results
+DONE [clustertracker]: abstract masking file
 
-TODO [clustertracker]: abstract masking file
 TODO [augur filter]: reference sequence in alignment & tree too many times?
 TODO [treetime mugration]: unfair to not do repeated EM thing to do ASR?
 TODO [treetime mugration]: only parsing results below inferred outbreak introduction nodes, should parse whole tree
 TODO [hiv trace]: results json says "threshold: 0.0001" - is there a silent program minimum?
 TODO (boston conf a analysis): missing lots of polytomy sequences with the outbreak I think, check context set methods
+TODO (data): make data availability table like S06 from Malek et al.
+TODO (K. aerogenes analysis): redo approx SNP threshold once full alignment built
