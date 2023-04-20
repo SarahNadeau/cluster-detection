@@ -45,7 +45,6 @@ process fasta_to_vcf {
         awk '{print}' !{reference} !{alignment} > alignment_w_reference.fasta
 
         # Convert to VCF, optionally masking some sites
-        echo "hi !{mask_sites_vcf}"
         if [[ !{mask_sites_vcf} != 'NO_MASK_FILE' ]]; then
             faToVcf -maskSites=!{mask_sites_vcf} alignment_w_reference.fasta alignment.vcf
         else

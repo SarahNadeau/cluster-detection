@@ -5,7 +5,7 @@ params.input_fasta = "../../clean_data/sars_cov_2_lemiux_boston/outbreak_samples
 params.input_metadata = "../../clean_data/sars_cov_2_lemiux_boston/clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
 params.input_metadata_nextstrain = "../../clean_data/sars_cov_2_lemiux_boston/nextstrain_metadata.txt"  // focal sequence metadata in nextstrain format (strain & location)
 params.trait_name = "division" // colname in metadata for trait to reconstruct
-params.output_folder = "../results/boston_confa"  // where results files will be saved to
+params.output_folder = "../results/boston_confa_$workflow.start"  // where results files will be saved to
 
 // Context data parameters
 params.context_region_name = "north-america"  // draw context set from ~4000 Nextstrain-curated north america sequences

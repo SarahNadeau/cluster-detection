@@ -6,7 +6,7 @@ params.input_metadata = "../../clean_data/klebsiella_malek_urmc/clustertracker_m
 params.input_metadata_nextstrain = "../../clean_data/klebsiella_malek_urmc/nextstrain_metadata.csv"
 params.reference_fasta = "../../clean_data/klebsiella_malek_urmc/reference_NC_015663v1.fna"
 params.trait_name = "location" // colname in metadata for trait to reconstruct
-params.output_folder = "../results/urmc_klebsiella"  // where results files will be saved to
+params.output_folder = "../results/urmc_klebsiella_$workflow.start"  // where results files will be saved to
 
 // Method-specific parameters
 // NOTE: parsnp outputs SNP alignment, so the distance threshold (0.5% based on ad-hoc lit search) was corrected for approximate core-genome alignment length (4540000) and approximate SNP alignment length (86983) based on a test run
