@@ -8,21 +8,24 @@ library(caper)
 library(ape)
 
 # Analysis-specific parameters
-# outbreak_annotation <- "CONF_A"
-# data_dir <- "nextflow/results/boston_confa_all_genbank_500_regions"
-# full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
-# outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
+outbreak_annotation <- "CONF_A"
+data_dir <- "nextflow/results/boston_confa_2023-04-21T13:14:43.502924-07:00"
+full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
+outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
+location_colname <- "division"
 
-outbreak_annotation <- "URMC"
-data_dir <- "nextflow/results/urmc_klebsiella_2023-04-21T10:26:45.975059-07:00"
-full_metadata <- read.csv(paste0(data_dir, "/nextstrain_metadata.csv"))
-outbreak_metadata <- full_metadata %>% filter(location == outbreak_annotation)
+# outbreak_annotation <- "URMC"
+# data_dir <- "nextflow/results/urmc_klebsiella_2023-04-21T10:26:45.975059-07:00"
+# full_metadata <- read.csv(paste0(data_dir, "/nextstrain_metadata.csv"))
+# outbreak_metadata <- full_metadata %>% filter(location == outbreak_annotation)
+# location_colname <- "location"
 ```
 
 Get clusters from treetime mugration output
 ```{r}
 mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
-node_annotations <- as.data.frame(as_tibble(mugration_treeio))
+node_annotations <- as.data.frame(as_tibble(mugration_treeio)) %>%
+    rename("location" = all_of(location_colname))
 mugration_phylo <- ape::as.phylo(mugration_treeio)
 
 # pre-order tree traversal to find outbreak MRCA nodes
@@ -77,13 +80,15 @@ mugration_descendent_data <- merge(
 Get clusters from clustertracker output
 
 ```{r}
+full_metadata_tmp <- full_metadata  %>%
+    rename("location" = all_of(location_colname))
 node_to_leaves <- read.csv(paste0(data_dir, "/clustertracker/node_to_leaves.csv"))
 clustertracker_descendent_data <- node_to_leaves %>%
     mutate(method = "clustertracker") %>%
     rename("label" = leaf) %>%
-    tidyr::separate(introduction_node, remove = F, into = c("introduction_location", "node", "node_idx"), sep = "_") %>%
+    tidyr::separate(introduction_node, remove = F, into = c("introduction_location", "node_idx"), sep = "_node_") %>%
     filter(introduction_location == outbreak_annotation) %>%
-    left_join(full_metadata, by = c("label" = "strain")) %>%
+    left_join(full_metadata_tmp, by = c("label" = "strain")) %>%
     mutate(tip = label) %>%
     dplyr::select(tip, introduction_node, method, label, location)
 ```
@@ -103,11 +108,12 @@ cluster_results <- data.frame(
 
 outbreak_sample_names <- outbreak_metadata$strain
 sample_names <- full_metadata$strain
-n_clusters <- clusters_list$trace_results$`Network Summary`$Clusters
-n_singletons <- clusters_list$trace_results$`Network Summary`$Singletons
+n_clusters <- max(cluster_idxs) + 1  # hivtrace clusters are zero-indexed
+singleton_sample_names <- sample_names[!(sample_names %in% clustered_sample_names)]
+n_singletons <- length(singleton_sample_names)
 
 singleton_results <- data.frame(
-    sample = sample_names[!(sample_names %in% clustered_sample_names)],
+    sample = singleton_sample_names,
     introduction_node = n_clusters:(n_clusters + n_singletons - 1))  # hivtrace clusters are zero-indexed
 
 hivtrace_descendent_data <- rbind(cluster_results, singleton_results) %>% 

@@ -5,19 +5,24 @@ library(tidyverse)
 library(ggplot2)
 library(ggtree)
 
+# Analysis-specific parameters
+data_dir <- "nextflow/results/boston_confa_2023-04-21T13:14:43.502924-07:00"
+outbreak_annotation <- "CONF_A"
+
+# data_dir <- "nextflow/results/urmc_klebsiella_2023-04-21T10:26:45.975059-07:00"
+# outbreak_annotation <- "URMC"
+
 # Load collated results
-data_dir <- "nextflow/results/urmc_klebsiella_2023-04-21T10:26:45.975059-07:00"
 results_per_sample <- read.delim(paste0(data_dir, "/collated_results_per_sample.txt"), sep = " ") %>%
     mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration")))
 results_per_introduction <- read.delim(paste0(data_dir, "/collated_results_per_introduction.txt"), sep = " ") %>%
     mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration")))
-outbreak_annotation <- "URMC"
 ```
 
 Plot number of clusters by method
 ```{r}
 clusters_by_method <- results_per_sample %>%
-    filter(tip_location == outbreak_annotation) %>%
+    filter(region == outbreak_annotation) %>%
     group_by(method) %>%
     summarise(n_samples = n(), n_clusters = length(unique(introduction_node)))
 
