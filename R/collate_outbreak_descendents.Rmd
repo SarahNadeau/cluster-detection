@@ -8,22 +8,20 @@ library(caper)
 library(ape)
 
 # Analysis-specific parameters
-outbreak_annotation <- "CONF_A"
-data_dir <- "nextflow/results/boston_confa_all_genbank_500_regions"
-full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
-outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
-```
+# outbreak_annotation <- "CONF_A"
+# data_dir <- "nextflow/results/boston_confa_all_genbank_500_regions"
+# full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
+# outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
 
-# Load tabular results files
-```{r}
-clustertracker_results <- read.delim(paste0(data_dir, "/clustertracker/introductions.tsv"))
+outbreak_annotation <- "URMC"
+data_dir <- "nextflow/results/urmc_klebsiella_2023-04-21T10:26:45.975059-07:00"
+full_metadata <- read.csv(paste0(data_dir, "/nextstrain_metadata.csv"))
+outbreak_metadata <- full_metadata %>% filter(location == outbreak_annotation)
 ```
-
-Assume .nhx file has already been created (see collate_per_sample_results.Rmd)
 
 Get clusters from treetime mugration output
 ```{r}
-mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree_mod.nhx"))
+mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
 node_annotations <- as.data.frame(as_tibble(mugration_treeio))
 mugration_phylo <- ape::as.phylo(mugration_treeio)
 
@@ -55,12 +53,12 @@ for (i in nrow(postorder_edges):1) {
 }
 
 # Get descendents of outbreak introductions
-outbreak_introductions <- introduction_data %>% filter(child_annotation == "CONF_A")
+outbreak_introductions <- introduction_data %>% filter(child_annotation == outbreak_annotation)
 is_first <- T
 for (node_idx in outbreak_introductions$child) {
     descendent_data_tmp <- data.frame(
         tip = caper::clade.members(x = node_idx, phy = mugration_phylo),
-        ancestor = node_idx,
+        introduction_node = node_idx,
         method = "mugration")
     if (is_first) {
         descendent_data <- descendent_data_tmp
@@ -70,7 +68,7 @@ for (node_idx in outbreak_introductions$child) {
     }
 }
 mugration_descendent_data <- merge(
-    x = descendent_data, y = node_annotations %>% select(node, label, division),
+    x = descendent_data, y = node_annotations %>% dplyr::select(node, label, location),
     by.x = "tip", by.y = "node",
     all.x = T, all.y = F
 )
@@ -79,6 +77,62 @@ mugration_descendent_data <- merge(
 Get clusters from clustertracker output
 
 ```{r}
-clustertracker_phylo <- ape::read.tree(paste0(data_dir, "/iqtree/tree.nwk"))
-print(clustertracker_phylo)
+node_to_leaves <- read.csv(paste0(data_dir, "/clustertracker/node_to_leaves.csv"))
+clustertracker_descendent_data <- node_to_leaves %>%
+    mutate(method = "clustertracker") %>%
+    rename("label" = leaf) %>%
+    tidyr::separate(introduction_node, remove = F, into = c("introduction_location", "node", "node_idx"), sep = "_") %>%
+    filter(introduction_location == outbreak_annotation) %>%
+    left_join(full_metadata, by = c("label" = "strain")) %>%
+    mutate(tip = label) %>%
+    dplyr::select(tip, introduction_node, method, label, location)
+```
+
+Get clusters from hiv-trace output
+
+```{r}
+clusters_json <- readr::read_file(paste0(data_dir, "/hiv_trace/clusters.json"))
+clusters_list <- rjson::fromJSON(json_str = clusters_json)
+
+cluster_idxs <- clusters_list$trace_results$Nodes$cluster$values
+clustered_sample_names <- clusters_list$trace_results$Nodes$id
+
+cluster_results <- data.frame(
+    sample = clustered_sample_names,
+    introduction_node = cluster_idxs)
+
+outbreak_sample_names <- outbreak_metadata$strain
+sample_names <- full_metadata$strain
+n_clusters <- clusters_list$trace_results$`Network Summary`$Clusters
+n_singletons <- clusters_list$trace_results$`Network Summary`$Singletons
+
+singleton_results <- data.frame(
+    sample = sample_names[!(sample_names %in% clustered_sample_names)],
+    introduction_node = n_clusters:(n_clusters + n_singletons - 1))  # hivtrace clusters are zero-indexed
+
+hivtrace_descendent_data <- rbind(cluster_results, singleton_results) %>% 
+    mutate(location = case_when(
+        sample %in% outbreak_sample_names ~ outbreak_annotation, T ~ "Other")) %>%
+    mutate(tip = sample, label = sample, method = "hivtrace") %>%
+    dplyr::select(tip, introduction_node, method, label, location)
+```
+
+Combine all results
+```{r}
+full_results <- rbind(
+    mugration_descendent_data,
+    clustertracker_descendent_data,
+    hivtrace_descendent_data
+) %>% rename("tip_location" = location)
+
+# inspect results
+full_results %>%
+    group_by(method, introduction_node) %>%
+    summarize(n_descendents = n(), frac_focal_region = sum(tip_location == outbreak_annotation) / n())
+
+# save results
+write.table(
+    x = full_results, 
+    file = paste0(data_dir, "/collated_results_per_introduction.txt"),
+    row.names = F)
 ```

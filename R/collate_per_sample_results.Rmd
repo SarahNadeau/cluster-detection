@@ -7,10 +7,15 @@ library(rjson)
 library(ape)
 
 # Analysis-specific parameters
-outbreak_annotation <- "CONF_A"
-data_dir <- "nextflow/results/boston_confa_all_genbank_500_regions"
-full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
-outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
+# outbreak_annotation <- "CONF_A"
+# data_dir <- "nextflow/results/boston_confa_all_genbank_500_regions"
+# full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
+# outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
+
+outbreak_annotation <- "URMC"
+data_dir <- "nextflow/results/urmc_klebsiella_2023-04-21T10:26:45.975059-07:00"
+full_metadata <- read.csv(paste0(data_dir, "/nextstrain_metadata.csv"))
+outbreak_metadata <- full_metadata %>% filter(location == outbreak_annotation)
 ```
 
 # Load tabular results files
@@ -18,19 +23,9 @@ outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
 clustertracker_results <- read.delim(paste0(data_dir, "/clustertracker/introductions.tsv"))
 ```
 
-# Deal with tree results files
-Convert timetree output to New Hampshire eXtended format
-```{bash}
-cd nextflow/results/boston_confa/mugration/
-grep "^ Tree" annotated_tree.nexus | sed "s/ Tree tree1=//g" | sed "s/&/&&NHX:/g" > annotated_tree_tmp.nhx
-# Edge case: get rid of parentheses that mess up parsing
-sed "s/Georgia (Asia)/Georgia Asia/g" annotated_tree_tmp.nhx > annotated_tree.nhx
-cd ../../../../
-```
-
 Get clusters from treetime mugration output
 ```{r}
-mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree_mod.nhx"))
+mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
 node_annotations <- as.data.frame(as_tibble(mugration_treeio))
 mugration_phylo <- ape::as.phylo(mugration_treeio)
 
@@ -149,6 +144,6 @@ print(tmp)
 # save results
 write.table(
     x = full_results, 
-    file = paste0(data_dir, "/collated_results.txt"),
+    file = paste0(data_dir, "/collated_results_per_sample.txt"),
     row.names = F)
 ```

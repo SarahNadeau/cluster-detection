@@ -6,33 +6,43 @@ library(ggplot2)
 library(ggtree)
 
 # Load collated results
-data_dir <- "nextflow/results/boston_confa_all_genbank_500_regions"
-boston_confa_results <- read.delim(paste0(data_dir, "/collated_results.txt"), sep = " ") %>%
+data_dir <- "nextflow/results/urmc_klebsiella_2023-04-21T10:26:45.975059-07:00"
+results_per_sample <- read.delim(paste0(data_dir, "/collated_results_per_sample.txt"), sep = " ") %>%
     mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration")))
-
-# Load method-specific results
-mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
-node_annotations <- as.data.frame(as_tibble(mugration_treeio))
-mugration_phylo <- ape::as.phylo(mugration_treeio)
+results_per_introduction <- read.delim(paste0(data_dir, "/collated_results_per_introduction.txt"), sep = " ") %>%
+    mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration")))
+outbreak_annotation <- "URMC"
 ```
 
 Plot number of clusters by method
 ```{r}
-boston_confa_clusters_by_method <- boston_confa_results %>%
-    filter(region == "CONF_A") %>%
+clusters_by_method <- results_per_sample %>%
+    filter(tip_location == outbreak_annotation) %>%
     group_by(method) %>%
     summarise(n_samples = n(), n_clusters = length(unique(introduction_node)))
 
-ggplot(data = boston_confa_clusters_by_method) +
+ggplot(data = clusters_by_method) +
     geom_col(aes(x = method, y = n_clusters)) + 
     theme_bw() + 
-    labs(x = "Method used", y = "Number of clusters identified")
-ggsave(file = paste0(data_dir, "/n_clusters_by_method.png"), width = 3, height = 3)
+    labs(x = element_blank(), y = "Number of focal clusters")
+ggsave(file = paste0(data_dir, "/n_clusters_by_method.png"), width = 3, height = 4)
 ```
 
 Plot size of sampled outbreak
 ```{r}
-# For clustertracker, introduction 
+outbreak_spread_by_method <- results_per_introduction %>%
+    group_by(method) %>%
+    summarize(
+        n_introduction_nodes = length(unique(introduction_node)),
+        `Context` = sum(tip_location != outbreak_annotation),
+        `Focal` = sum(sum(tip_location == outbreak_annotation))) %>%
+    pivot_longer(cols = c(`Context`, `Focal`), names_to = "Sample type")
+
+ggplot(data = outbreak_spread_by_method) +
+    geom_bar(aes(x = method, y = value, fill = `Sample type`), position = "stack", stat = "identity") +
+    theme_bw() +
+    labs(x = element_blank(), y = "Number of samples in focal clusters")
+ggsave(file = paste0(data_dir, "/outbreak_size_by_method.png"), width = 4, height = 4)
 ```
 
 Bits and bobs, leftovers
