@@ -9,10 +9,10 @@ import bte
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--mat_pb", help="MAT protobuf file", type=str, 
-    default="../matutils/mutation_annotated_tree.pb")
+    default="matutils/mutation_annotated_tree.pb")
 parser.add_argument(
     "--introductions", help="Introductions file", type=str,
-    default="introductions.tsv")
+    default="clustertracker/introductions.tsv")
 args = parser.parse_args()
 
 # Load data
@@ -20,15 +20,13 @@ mat = bte.MATree(args.mat_pb)
 introductions = pd.read_table(args.introductions)
 
 # Get introduction nodes
-introduction_nodes = []
-for index, row in introductions.iterrows():
-    introduction_nodes.append(row['introduction_node'])
+introduction_nodes = set(introductions['introduction_node'].to_list())
 
 # Get the leaves for each introduction node in tree
 leaf_data = pd.DataFrame(columns=['introduction_node', 'leaf'])
 
-for introduction_node in set(introduction_nodes):
-    node_id = introduction_node.split("_", 1)[1]
+for introduction_node in introduction_nodes:
+    node_id = "node_" + introduction_node.split("_node_", 1)[1]
     leaf_list = mat.get_leaves_ids(nid=node_id)
     print(str(introduction_node) + " has " + str(len(leaf_list)) + " leaves")
     list_of_tuples = list(zip([introduction_node] * len(leaf_list), leaf_list))
