@@ -11,6 +11,9 @@ params.output_folder = "../results/boston_confa_$workflow.start"  // where resul
 params.context_region_name = "north-america"  // draw context set from ~4000 Nextstrain-curated north america sequences
 params.reference_fasta = "../../clean_data/sars_cov_2_lemiux_boston/reference_NC_045512v2.fa"  // SARS-CoV-2 reference genome
 params.reference_name  = "NC_045512v2"  // name of reference sequence to ignore for priority calculation
+params.exclude_strains = "../../clean_data/sars_cov_2_lemiux_boston/exclude_augur_filter.txt"  // exclude focal samples from context set selection
+params.max_similarity_seqs = 10  // number most genetically similar sequences (from anywhere) to include in context
+params.max_geocontext_seqs = 20  // number of geographic context sequences to include in context (will be divided by region, year, month)
 
 // Tree-building parameters
 params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as outgroup
@@ -22,10 +25,10 @@ params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must over
 
 // Import processes from modules
 include { download_nextstrain_covid_data; get_proximities; get_priorities; run_nextstrain_all } from '../modules/augur.nf'
-include { augur_filter as filter_1; augur_filter as filter_2; augur_aggregate } from '../modules/augur.nf'
+include { augur_filter as filter_1; augur_filter as filter_2; augur_aggregate_2_filters } from '../modules/augur.nf'
 include { build_tree } from '../modules/iqtree.nf'
 include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce; pb_to_taxonium } from '../modules/matutils.nf'
-include { get_metadata_from_nextstrain; add_metadata_to_nextstrain } from '../modules/metadata_utils.nf'
+include { get_metadata_from_nextstrain; add_metadata_to_nextstrain; combine_exclude_files } from '../modules/metadata_utils.nf'
 include { treetime_mugration } from '../modules/treetime.nf'
 include { hiv_trace } from '../modules/hiv_trace.nf'
 
@@ -37,6 +40,7 @@ workflow {
     input_metadata_nextstrain = Channel.fromPath(params.input_metadata_nextstrain)
     reference_fasta = Channel.fromPath(params.reference_fasta)
     mask_sites_vcf = Channel.fromPath(params.mask_sites_vcf)
+    exclude_strains = Channel.fromPath(params.exclude_strains)
 
     // Align focal sequences
     focal_alignment = align_sequences(input_fasta, reference_fasta)
@@ -56,32 +60,38 @@ workflow {
         download_nextstrain_covid_data.out.alignment,
         get_priorities.out.priorities, 
         get_priorities.out.index,
-        Channel.value("true"),
-        Channel.value("--min-length 20000"))
+        exclude_strains,
+        Channel.value("true"), 
+        Channel.value("--min-length 20000 --subsample-max-sequences ${params.max_similarity_seqs}"))
+    combine_exclude_files(
+        exclude_strains,
+        filter_1.out.filtered_strains) // don't re-select similarity context in geographic context set
     filter_2(
         download_nextstrain_covid_data.out.metadata,
         download_nextstrain_covid_data.out.alignment,
         get_priorities.out.priorities, 
         get_priorities.out.index,
-        Channel.value("false"),
-        Channel.value("--min-length 20000 --group-by region year month --subsample-max-sequences 200"))
-    augur_aggregate(
+        combine_exclude_files.out.exclude_strains_combined,
+        Channel.value("false"), // don't use genetic similarity here
+        Channel.value("--min-length 20000 --group-by region year month --subsample-max-sequences ${params.max_geocontext_seqs}"))
+
+    augur_aggregate_2_filters(
         focal_alignment,
-        filter_1.out.filtered_context.concat(filter_2.out.filtered_context),
-        filter_1.out.filtered_context_metadata.concat(filter_2.out.filtered_context_metadata))
+        filter_1.out.filtered_context.join(filter_2.out.filtered_context),
+        filter_1.out.filtered_context_metadata.join(filter_2.out.filtered_context_metadata))
 
     // Get clustertracker metadata
     full_metadata = get_metadata_from_nextstrain(
-        augur_aggregate.out.filtered_context_metadata, 
+        augur_aggregate_2_filters.out.filtered_context_metadata, 
         input_metadata)
 
     // Run clustertracker to estimate introductions
     vcf = fasta_to_vcf(
-        augur_aggregate.out.alignment_plus_filtered_context, 
+        augur_aggregate_2_filters.out.alignment_plus_filtered_context, 
         reference_fasta,
         mask_sites_vcf)
     tree = build_tree(
-        augur_aggregate.out.alignment_plus_filtered_context, 
+        augur_aggregate_2_filters.out.alignment_plus_filtered_context, 
         params.outgroup_taxon)
     mat_pb = build_mat(vcf, tree)
     matutils_introduce(mat_pb, full_metadata)
@@ -97,19 +107,20 @@ workflow {
 
     // Run a SNP-distance based clustering method
     hiv_trace(
-        augur_aggregate.out.alignment_plus_filtered_context,
+        augur_aggregate_2_filters.out.alignment_plus_filtered_context,
         reference_fasta,
         params.tn93_distance_threshold,
         params.hiv_trace_min_overlap)
 
     // Run nextstrain mugration in the context of a nextstrain workflow
     full_metadata_nextstrain = add_metadata_to_nextstrain(
-        augur_aggregate.out.filtered_context_metadata,
+        augur_aggregate_2_filters.out.filtered_context_metadata,
         input_metadata_nextstrain)
     run_nextstrain_all(
         full_metadata_nextstrain,
-        augur_aggregate.out.alignment_plus_filtered_context,
-        params.trait_name)
+        augur_aggregate_2_filters.out.alignment_plus_filtered_context,
+        params.trait_name,
+        Channel.value("--clock-rate 0.0008 --clock-std-dev 0.004 --root ${params.reference_name}"))
 
     // TODO: run BEAST1 DTA to estiamte ancestral locations
 

@@ -69,3 +69,20 @@ process save_metadata {
         echo "Copying metadata to results directory"
         """
 }
+
+// Combine two txt files of strains to exclude for augur filter
+process combine_exclude_files {
+    publishDir(path: "${params.output_folder}", mode: 'copy')
+
+    input:
+        path exclude_strains_1
+        path exclude_strains_2
+
+    output:
+        path "exclude_strains_combined.txt", emit: exclude_strains_combined
+
+    shell:
+        """
+        awk '{print}' !{exclude_strains_1} !{exclude_strains_2} > exclude_strains_combined.txt
+        """
+}

@@ -125,12 +125,14 @@ process augur_filter {
         path context_alignment
         path priorities
         path index
+        path exclude_strains
         val use_priorities
         val other_params
 
     output:
-        path "filtered_context.fasta", emit: filtered_context
-        path "filtered_context_metadata.tsv", emit: filtered_context_metadata
+        tuple val("seqs"), path("filtered_context.fasta"), emit: filtered_context
+        tuple val("metadatas"), path("filtered_context_metadata.tsv"), emit: filtered_context_metadata
+        path("filtered_context_strains.txt"), emit: filtered_strains
 
     shell:
         """
@@ -143,29 +145,33 @@ process augur_filter {
                 --sequences !{context_alignment} \
                 --sequence-index !{index} \
                 --priority !{priorities} \
+                --exclude !{exclude_strains} \
                 !{other_params} \
                 --output filtered_context.fasta \
-                --output-metadata filtered_context_metadata.tsv
+                --output-metadata filtered_context_metadata.tsv \
+                --output-strains filtered_context_strains.txt
         else
             echo "not using Nextstrain priorities"
             augur filter \
                 --metadata !{metadata} \
                 --sequences !{context_alignment} \
                 --sequence-index !{index} \
+                --exclude !{exclude_strains} \
                 !{other_params} \
                 --output filtered_context.fasta \
-                --output-metadata filtered_context_metadata.tsv
+                --output-metadata filtered_context_metadata.tsv \
+                --output-strains filtered_context_strains.txt
         fi
         """
 }
 
 // Aggregate focal alignment and filtered context to a final alignment
-process augur_aggregate {
+process augur_aggregate_2_filters {
 
     input:
         path focal_alignment
-        path 'filtered_context?.fasta'
-        path 'filtered_context_metadata?.tsv'
+        tuple val(file_type), path('filtered_context.fasta'), path('filtered_context2.fasta')
+        tuple val(file_type), path('filtered_context_metadata.tsv'), path('filtered_context_metadata2.tsv')
 
     output:
         path "alignment_plus_filtered_context.fasta", emit: alignment_plus_filtered_context
@@ -175,7 +181,6 @@ process augur_aggregate {
         """
         awk '{print}' !{focal_alignment} filtered_context*.fasta > alignment_plus_filtered_context.fasta
         awk '{print}' filtered_context_metadata*.tsv > filtered_context_metadata.tsv
-        echo "stopping here!"; exit 1
         """
 }
 
@@ -253,6 +258,7 @@ process run_nextstrain_all {
         path metadata
         path alignment
         val trait_name
+        val other_refine_params
 
     output:
         path "auspice.json", emit: auspice_json
@@ -280,7 +286,8 @@ process run_nextstrain_all {
             --timetree \
             --coalescent opt \
             --date-confidence \
-            --date-inference marginal
+            --date-inference marginal \
+            !{other_refine_params}
 
         augur traits \
             --tree tree.nwk \
