@@ -62,7 +62,7 @@ workflow {
         get_priorities.out.index,
         exclude_strains,
         Channel.value("true"), 
-        Channel.value("--min-length 20000 --subsample-max-sequences ${params.max_similarity_seqs}"))
+        Channel.value("--min-length 20000 --max-date '2020-07-01' --subsample-max-sequences ${params.max_similarity_seqs}"))
     combine_exclude_files(
         exclude_strains,
         filter_1.out.filtered_strains) // don't re-select similarity context in geographic context set
@@ -73,7 +73,7 @@ workflow {
         get_priorities.out.index,
         combine_exclude_files.out.exclude_strains_combined,
         Channel.value("false"), // don't use genetic similarity here
-        Channel.value("--min-length 20000 --group-by region year month --subsample-max-sequences ${params.max_geocontext_seqs}"))
+        Channel.value("--min-length 20000 --max-date '2020-07-01' --group-by region year month --subsample-max-sequences ${params.max_geocontext_seqs}"))
 
     augur_aggregate_2_filters(
         focal_alignment,
