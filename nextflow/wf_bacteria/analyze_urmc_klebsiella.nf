@@ -18,7 +18,7 @@ params.reference_name  = "reference_NC_015663v1.fna"  // name of reference seque
 include { get_snps_and_tree } from '../modules/parsnp.nf'
 include { save_metadata } from '../modules/metadata_utils.nf'
 include { build_mat; matutils_introduce; pb_to_taxonium } from '../modules/matutils.nf'
-include { treetime_mugration } from '../modules/treetime.nf'
+include { treetime_mugration; convert_tree_to_nhx } from '../modules/treetime.nf'
 include { hiv_trace} from '../modules/hiv_trace.nf'
 include { run_nextstrain_all_vcf } from '../modules/augur.nf'
 
@@ -48,6 +48,7 @@ workflow {
         get_snps_and_tree.out.tree,
         input_metadata_nextstrain,
         params.trait_name)
+    convert_tree_to_nhx(treetime_mugration.out.annotated_tree_nexus)
 
     // Run a SNP-distance based clustering method
     hiv_trace(
@@ -62,6 +63,6 @@ workflow {
         get_snps_and_tree.out.vcf,
 	    reference_fasta,
         params.trait_name,
-        Channel.value("--root ${params.ref}"))
+        Channel.value("--root ${params.reference_name}"))
 
 }

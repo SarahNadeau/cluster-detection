@@ -29,7 +29,7 @@ include { augur_filter as filter_1; augur_filter as filter_2; augur_aggregate_2_
 include { build_tree } from '../modules/iqtree.nf'
 include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce; pb_to_taxonium } from '../modules/matutils.nf'
 include { get_metadata_from_nextstrain; add_metadata_to_nextstrain; combine_exclude_files } from '../modules/metadata_utils.nf'
-include { treetime_mugration } from '../modules/treetime.nf'
+include { treetime_mugration; convert_tree_to_nhx } from '../modules/treetime.nf'
 include { hiv_trace } from '../modules/hiv_trace.nf'
 
 // The workflow itself
@@ -104,6 +104,7 @@ workflow {
         tree,
         full_metadata,
         params.trait_name)
+    convert_tree_to_nhx(treetime_mugration.out.annotated_tree_nexus)
 
     // Run a SNP-distance based clustering method
     hiv_trace(
