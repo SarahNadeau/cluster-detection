@@ -170,17 +170,17 @@ process augur_aggregate_2_filters {
 
     input:
         path focal_alignment
-        tuple val(file_type), path('filtered_context.fasta'), path('filtered_context2.fasta')
-        tuple val(file_type), path('filtered_context_metadata.tsv'), path('filtered_context_metadata2.tsv')
+        tuple val(file_type), path('filtered_context1.fasta'), path('filtered_context2.fasta')
+        tuple val(file_type), path('filtered_context_metadata1.tsv'), path('filtered_context_metadata2.tsv')
 
     output:
         path "alignment_plus_filtered_context.fasta", emit: alignment_plus_filtered_context
-        path "filtered_context_metadata.tsv", emit: filtered_context_metadata
+        path "all_filtered_context_metadata.tsv", emit: filtered_context_metadata
 
     shell:
         """
         awk '{print}' !{focal_alignment} filtered_context*.fasta > alignment_plus_filtered_context.fasta
-        awk '{print}' filtered_context_metadata*.tsv > filtered_context_metadata.tsv
+        awk '{print}' filtered_context_metadata*.tsv > all_filtered_context_metadata.tsv
         """
 }
 
