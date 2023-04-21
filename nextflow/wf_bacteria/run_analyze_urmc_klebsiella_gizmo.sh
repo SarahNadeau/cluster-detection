@@ -16,5 +16,4 @@ nextflow \
     analyze_urmc_klebsiella.nf \
     -profile apptainer \
     -resume \
-    -stub-run \
-    -with-trace 
+    -stub-run

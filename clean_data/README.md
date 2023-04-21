@@ -38,6 +38,7 @@ context_samples_110/
 
 aac.02577-18-sd006.xlsx
 * metadata for the 110 context sequences used in Malek et al.
+* for analysis I assume all samples are from the 21st century (20XX-XX-XX) because otherwise nextstrain refine has a really hard time.
 
 klebsiella_file_to_sample_name_mapping.txt
 * hand-made in excel based on the other metadata files

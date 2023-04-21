@@ -197,6 +197,7 @@ process run_nextstrain_all_vcf {
         path alignment
 	    path reference
         val trait_name
+        val other_refine_params
 
     output:
         path "auspice.json", emit: auspice_json
@@ -226,7 +227,8 @@ process run_nextstrain_all_vcf {
             --timetree \
             --coalescent opt \
             --date-confidence \
-            --date-inference marginal
+            --date-inference marginal \
+            !{other_refine_params}
 
         augur traits \
             --tree tree.nwk \
