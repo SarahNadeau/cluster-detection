@@ -228,6 +228,7 @@ process run_nextstrain_all_vcf {
             --coalescent opt \
             --date-confidence \
             --date-inference marginal \
+	    --keep-polytomies \
             !{other_refine_params}
 
         augur traits \
@@ -289,6 +290,7 @@ process run_nextstrain_all {
             --coalescent opt \
             --date-confidence \
             --date-inference marginal \
+	    --keep-polytomies \
             !{other_refine_params}
 
         augur traits \

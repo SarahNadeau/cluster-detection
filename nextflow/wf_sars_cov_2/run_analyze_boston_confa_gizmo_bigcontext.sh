@@ -21,5 +21,4 @@ nextflow \
     -profile apptainer \
     --context_region_name '.' \
     -resume \
-    -stub-run \
-    -with-trace
+    -stub-run 
