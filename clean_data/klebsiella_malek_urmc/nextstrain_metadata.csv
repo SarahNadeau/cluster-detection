@@ -1,5 +1,5 @@
 strain,virus,date,region,country,division,location
-reference_NC_015663v1.fna,Klebsiella aerogenes,2011-06-03,?,?,?,?
+reference_NC_015663v1.fna.ref,Klebsiella aerogenes,2011-06-03,?,?,?,?
 GCF_003950615.1_ASM395061v1_genomic.fna,Klebsiella aerogenes,2015-XX-XX,?,USA,New York,URMC
 GCF_003950545.1_ASM395054v1_genomic.fna,Klebsiella aerogenes,2017-XX-XX,?,USA,New York,URMC
 GCF_003951235.1_ASM395123v1_genomic.fna,Klebsiella aerogenes,2016-XX-XX,?,USA,New York,URMC
