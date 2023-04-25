@@ -12,7 +12,7 @@ params.output_folder = "../results/urmc_klebsiella_$workflow.start"  // where re
 // NOTE: parsnp outputs SNP alignment, so the distance threshold (0.5% based on ad-hoc lit search) was corrected for approximate core-genome alignment length (4540000) and approximate SNP alignment length (86983) based on a test run
 params.tn93_distance_threshold = 0.1 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site) 
 params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
-params.reference_name  = "reference_NC_015663v1.fna"  // name of reference sequence to root augur tree on
+params.reference_name  = "reference_NC_015663v1.fna.ref"  // name of reference sequence to root augur tree on (note parsnp appends ".ref")
 
 // Import processes from modules
 include { get_snps_and_tree } from '../modules/parsnp.nf'
