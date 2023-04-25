@@ -23,7 +23,7 @@ location_colname <- "division"
 
 Get clusters from treetime mugration output
 ```{r}
-mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
+mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/augur/annotated_tree.nhx"))
 node_annotations <- as.data.frame(as_tibble(mugration_treeio)) %>%
     rename("location" = all_of(location_colname))
 mugration_phylo <- ape::as.phylo(mugration_treeio)
@@ -37,8 +37,8 @@ is_first <- T
 for (i in nrow(postorder_edges):1) {
     parent <- postorder_edges[i, 1]
     child <- postorder_edges[i, 2]
-    parent_annotation <- node_annotations[parent, 5]
-    child_annotation <- node_annotations[child, 5]
+    parent_annotation <- node_annotations[parent, location_colname]
+    child_annotation <- node_annotations[child, location_colname]
     if (is.na(parent_annotation) || child_annotation != parent_annotation) {
         introduction_data_tmp <- data.frame(
             parent = parent,
