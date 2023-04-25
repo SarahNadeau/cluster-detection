@@ -12,8 +12,8 @@ params.context_region_name = "north-america"  // draw context set from ~4000 Nex
 params.reference_fasta = "../../clean_data/sars_cov_2_lemiux_boston/reference_NC_045512v2.fa"  // SARS-CoV-2 reference genome
 params.reference_name  = "NC_045512v2"  // name of reference sequence to ignore for priority calculation
 params.exclude_strains = "../../clean_data/sars_cov_2_lemiux_boston/exclude_augur_filter.txt"  // exclude focal samples from context set selection
-params.max_similarity_seqs = 10  // number most genetically similar sequences (from anywhere) to include in context
-params.max_geocontext_seqs = 20  // number of geographic context sequences to include in context (will be divided by region, year, month)
+params.max_similarity_seqs = 200  // number most genetically similar sequences (from anywhere) to include in context
+params.max_geocontext_seqs = 400  // number of geographic context sequences to include in context (will be divided by region, year, month)
 
 // Tree-building parameters
 params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as outgroup
