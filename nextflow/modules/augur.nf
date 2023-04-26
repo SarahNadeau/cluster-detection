@@ -48,20 +48,23 @@ process get_proximities {
         path context_alignment
         path focal_alignment
         path reference
-        val reference_name
 
     output:
         path "proximities.tsv"
 
-    shell:
+    script:
         """
         set -eu
+        
+        REF_NAME="\$(grep '^>' ${reference} | sed 's/>//')"
+        
         git clone https://github.com/nextstrain/ncov.git ./ncov
+        
         /Python-3.8.0/python ./ncov/scripts/get_distance_to_focal_set.py \
-            --alignment !{context_alignment} \
-            --focal-alignment !{focal_alignment} \
-            --reference !{reference} \
-            --ignore-seqs !{reference_name} \
+            --alignment ${context_alignment} \
+            --focal-alignment ${focal_alignment} \
+            --reference ${reference} \
+            --ignore-seqs \${REF_NAME} \
             --output proximities.tsv
         """
 
@@ -110,6 +113,23 @@ process get_priorities {
         cp ~/cluster-detection/nextflow/cached_results/boston_confa/priorities.tsv .
         cp ~/cluster-detection/nextflow/cached_results/boston_confa/index.tsv .
 	"""
+}
+
+// Get list of headers to definitely exclude when filtering for context
+process get_context_exclude_list {
+
+    input:
+        path input_fasta
+        path reference
+    
+    output:
+        path "exclude.txt"
+
+    shell:
+        """
+        grep "^>" !{reference} | sed 's/>//' > exclude.txt
+        grep "^>" !{input_fasta} | sed 's/>//' >> exclude.txt
+        """
 }
 
 // Filter context sequence set based on region and genetic priorities
@@ -283,10 +303,6 @@ process run_nextstrain_all {
             --output-tree tree.nwk \
             --output-node-data branch_lengths.json \
             --timetree \
-            --coalescent opt \
-            --date-confidence \
-            --date-inference marginal \
-	    --keep-polytomies \
             !{other_refine_params}
 
         augur traits \

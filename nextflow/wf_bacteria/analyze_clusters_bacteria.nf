@@ -9,7 +9,7 @@ params.trait_name = "location" // colname in metadata for trait to reconstruct
 params.output_folder = "test_results_$workflow.start"  // where results files will be saved to
 params.tn93_distance_threshold = 0.1 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site) 
 params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
-params.nextstrain_refine_params = "--timetree --coalescent opt --keep-polytomies --root reference.fasta.ref" // how should refine create a rooted timetree? See https://docs.nextstrain.org/projects/augur/en/stable/usage/cli/refine.html
+params.nextstrain_refine_params = "--coalescent opt --keep-polytomies --root reference.fasta.ref" // how should refine create a rooted timetree? See https://docs.nextstrain.org/projects/augur/en/stable/usage/cli/refine.html
 
 // Import processes from modules
 include { get_snps_and_tree } from '../modules/parsnp.nf'
