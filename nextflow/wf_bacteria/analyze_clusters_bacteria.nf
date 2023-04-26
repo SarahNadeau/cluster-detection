@@ -1,23 +1,20 @@
-// This workflow is to analyze the URMC K. aerogenes outbreak dataset with several methods.
+// This workflow is to analyze a bacterial outbreak dataset with several clustering methods.
 
-// Input & output data parameters
-params.input_fasta_dir = "../../clean_data/klebsiella_malek_urmc/all_samples_for_analysis"  // directory of *only* unaligned focal sequences
-params.input_metadata = "../../clean_data/klebsiella_malek_urmc/clustertracker_metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
-params.input_metadata_nextstrain = "../../clean_data/klebsiella_malek_urmc/nextstrain_metadata.csv"
-params.reference_fasta = "../../clean_data/klebsiella_malek_urmc/reference_NC_015663v1.fna"
+// Default parameters (to run small test data)
+params.input_fasta_dir = "test_data/samples"  // directory of *only* unaligned focal sequences
+params.input_metadata = "test_data/metadata.txt"  // focal sequence metadata in clustertracker format (strain & location)
+params.input_metadata_nextstrain = "test_data/metadata_nextstrain.csv"
+params.reference_fasta = "test_data/reference.fasta"
 params.trait_name = "location" // colname in metadata for trait to reconstruct
-params.output_folder = "../results/urmc_klebsiella_$workflow.start"  // where results files will be saved to
-
-// Method-specific parameters
-// NOTE: parsnp outputs SNP alignment, so the distance threshold (0.5% based on ad-hoc lit search) was corrected for approximate core-genome alignment length (4540000) and approximate SNP alignment length (86983) based on a test run
+params.output_folder = "test_results_$workflow.start"  // where results files will be saved to
 params.tn93_distance_threshold = 0.1 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site) 
 params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
-params.reference_name  = "reference_NC_015663v1.fna.ref"  // name of reference sequence to root augur tree on (note parsnp appends ".ref")
+params.nextstrain_refine_params = "--timetree --coalescent opt --keep-polytomies --root reference.fasta.ref" // how should refine create a rooted timetree? See https://docs.nextstrain.org/projects/augur/en/stable/usage/cli/refine.html
 
 // Import processes from modules
 include { get_snps_and_tree } from '../modules/parsnp.nf'
 include { save_metadata } from '../modules/metadata_utils.nf'
-include { build_mat; matutils_introduce; pb_to_taxonium } from '../modules/matutils.nf'
+include { build_mat; matutils_introduce; pb_to_taxonium; pb_introductions_to_leaves } from '../modules/matutils.nf'
 include { treetime_mugration; convert_tree_to_nhx } from '../modules/treetime.nf'
 include { hiv_trace} from '../modules/hiv_trace.nf'
 include { run_nextstrain_all_vcf } from '../modules/augur.nf'
@@ -42,6 +39,9 @@ workflow {
     pb_to_taxonium(
         mat_pb, 
         matutils_introduce.out.introductions_tsv)
+    pb_introductions_to_leaves(
+        mat_pb, 
+        matutils_introduce.out.introductions_tsv)
 
     // Run nextstrain mugration to estimate ancestral locations
     treetime_mugration(
@@ -63,6 +63,6 @@ workflow {
         get_snps_and_tree.out.vcf,
 	    reference_fasta,
         params.trait_name,
-        Channel.value("--root ${params.reference_name}"))
+        Channel.value(params.nextstrain_refine_params))
 
 }

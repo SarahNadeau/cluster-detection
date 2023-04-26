@@ -124,3 +124,19 @@ process pb_to_taxonium {
             --columns "introduction_node,introduction_rank,growth_score,cluster_size,intro_confidence,parent_confidence,region,origins,origins_confidence,mutation_path"
         """
 }
+
+// Extract introduction-descendent tips mapping from protobuf file
+process pb_introductions_to_leaves {
+    container 'snads/bte:0.9.0'
+    publishDir(path: "${params.output_folder}/clustertracker", mode: 'copy')
+
+    input:
+        path pb
+        path introductions
+
+    output:
+        path "node_to_leaves.csv"
+
+    shell:
+        template "get_node_to_leaves_mat.py"
+}

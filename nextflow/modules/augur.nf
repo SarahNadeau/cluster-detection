@@ -214,7 +214,7 @@ process run_nextstrain_all_vcf {
 
         augur tree \
             --alignment !{alignment} \
-	    --vcf-reference !{reference} \
+	        --vcf-reference !{reference} \
             --output tree_raw.nwk
 
         augur refine \
@@ -225,10 +225,6 @@ process run_nextstrain_all_vcf {
             --output-tree tree.nwk \
             --output-node-data branch_lengths.json \
             --timetree \
-            --coalescent opt \
-            --date-confidence \
-            --date-inference marginal \
-	    --keep-polytomies \
             !{other_refine_params}
 
         augur traits \

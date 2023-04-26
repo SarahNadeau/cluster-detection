@@ -9,10 +9,10 @@ import bte
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--mat_pb", help="MAT protobuf file", type=str, 
-    default="matutils/mutation_annotated_tree.pb")
+    default="mutation_annotated_tree.pb")
 parser.add_argument(
     "--introductions", help="Introductions file", type=str,
-    default="clustertracker/introductions.tsv")
+    default="introductions.tsv")
 args = parser.parse_args()
 
 # Load data
