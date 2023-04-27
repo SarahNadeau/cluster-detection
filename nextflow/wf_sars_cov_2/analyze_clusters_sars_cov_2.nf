@@ -9,16 +9,8 @@ params.output_folder = "test_results_$workflow.start"  // where results files wi
 params.context_region_name = "global"  // draw context set from ~4000 Nextstrain-curated north america sequences
 params.reference_fasta = "test_data/reference.fasta"  // SARS-CoV-2 reference genome
 params.reference_name  = "NC_045512v2"  // name of reference sequence to ignore for priority calculation
-<<<<<<< HEAD:nextflow/wf_sars_cov_2/analyze_boston_confa.nf
-params.exclude_strains = "../../clean_data/sars_cov_2_lemiux_boston/exclude_augur_filter.txt"  // exclude focal samples from context set selection
-params.max_similarity_seqs = 200  // number most genetically similar sequences (from anywhere) to include in context
-params.max_geocontext_seqs = 400  // number of geographic context sequences to include in context (will be divided by region, year, month)
-
-// Tree-building parameters
-=======
 params.filter_similarity_specs = "--min-length 20000 --max-date '2020-07-01' --subsample-max-sequences 10"
 params.filter_geocontext_specs = "--min-length 20000 --max-date '2020-07-01' --group-by region year month --subsample-max-sequences 20"
->>>>>>> traverse-mat:nextflow/wf_sars_cov_2/analyze_clusters_sars_cov_2.nf
 params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as outgroup
 params.mask_sites_vcf = "assets/problematic_sites_sarsCov2.vcf" // vcf file of problematic sites to mask
 params.tn93_distance_threshold = 0.0000667 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site)
