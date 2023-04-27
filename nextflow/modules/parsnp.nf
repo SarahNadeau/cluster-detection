@@ -3,8 +3,7 @@ process get_snps_and_tree {
     container 'staphb/parsnp:1.5.6'
     publishDir(path: "${params.output_folder}/parsnp", mode: 'copy')
 
-    cpus 4
-    memory "5 GB"
+    label "process_medium"
 
     input:
         path input_fasta_dir

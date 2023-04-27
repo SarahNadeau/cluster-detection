@@ -5,8 +5,7 @@ process align_sequences {
     container 'pathogengenomics/usher@sha256:a311c7b896279a41a36608c29c8ecdc5b8420c01b27ffad160a1867098051c01'
     publishDir(path: "${params.output_folder}/matutils", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "process_low"
 
     input:
         path input_fasta
@@ -18,7 +17,7 @@ process align_sequences {
     shell:
         """
         set -eu
-        mafft --thread 2 --auto --keeplength --addfragments !{input_fasta} !{reference} > alignment.fasta
+        mafft --thread ${task.cpus} --auto --keeplength --addfragments !{input_fasta} !{reference} > alignment.fasta
         """
 }
 
@@ -26,9 +25,6 @@ process align_sequences {
 process fasta_to_vcf {
     container 'pathogengenomics/usher@sha256:a311c7b896279a41a36608c29c8ecdc5b8420c01b27ffad160a1867098051c01'
     publishDir(path: "${params.output_folder}/matutils", mode: 'copy')
-
-    cpus 1
-    memory "1 GB"
 
     input:
         path alignment
@@ -58,9 +54,6 @@ process build_mat {
     container 'pathogengenomics/usher@sha256:a311c7b896279a41a36608c29c8ecdc5b8420c01b27ffad160a1867098051c01'
     publishDir(path: "${params.output_folder}/matutils", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
-
     input:
         path vcf
         path tree
@@ -79,9 +72,6 @@ process build_mat {
 process matutils_introduce {
     container 'pathogengenomics/usher@sha256:a311c7b896279a41a36608c29c8ecdc5b8420c01b27ffad160a1867098051c01'
     publishDir(path: "${params.output_folder}/clustertracker", mode: 'copy')
-
-    cpus 2
-    memory "1 GB"
 
     input:
         path pb 
@@ -102,9 +92,6 @@ process matutils_introduce {
 process pb_to_taxonium {
     container 'snads/taxoniumtools:2.0.91'
     publishDir(path: "${params.output_folder}/clustertracker", mode: 'copy')
-
-    cpus 1
-    memory "1 GB"
 
     input:
         path pb

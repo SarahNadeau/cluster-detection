@@ -7,9 +7,6 @@ process hiv_trace {
     container 'snads/hivtrace:0.5.0'
     publishDir(path: "${params.output_folder}/hiv_trace", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
-
     input:
         path input_fasta
         path reference

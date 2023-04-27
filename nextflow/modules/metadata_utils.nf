@@ -3,9 +3,6 @@ process get_metadata_from_nextstrain {
     publishDir(path: "${params.output_folder}", mode: 'copy')
     container 'nextstrain/base:build-20230411T103027Z'  // use any old container with /bin/bash
 
-    cpus 1
-    memory "1 GB"
-
     input:
         path nextstrain_metadata
         path focal_metadata
@@ -30,9 +27,6 @@ process get_metadata_from_nextstrain {
 process add_metadata_to_nextstrain {
     publishDir(path: "${params.output_folder}", mode: 'copy')
     container 'nextstrain/base:build-20230411T103027Z'
-
-    cpus 1
-    memory "1 GB"
 
     input:
         path nextstrain_metadata

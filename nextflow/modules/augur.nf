@@ -6,9 +6,6 @@ process download_nextstrain_covid_data {
         mode: 'copy',
         pattern: 'metadata_*')
 
-    cpus 1
-    memory "1 GB"
-
     input:
         val region_name
 
@@ -41,8 +38,7 @@ process get_proximities {
     container 'staphb/augur:16.0.3'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "process_medium"
 
     input: 
         path context_alignment
@@ -80,8 +76,7 @@ process get_priorities {
     container 'staphb/augur:16.0.3'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "process_medium"
 
     input: 
         path context_alignment
@@ -137,8 +132,7 @@ process augur_filter {
     container 'staphb/augur:16.0.3'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "process_medium"
 
     input: 
         path metadata
@@ -207,10 +201,10 @@ process augur_aggregate_2_filters {
 // run the whole nextstrain workflow *after filtering*, including export to auspice for visualization
 process run_nextstrain_all_vcf {
     container 'nextstrain/base:build-20230411T103027Z'
+    containerOptions = "--user root"
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "proces_medium"
 
     input: 
         path metadata
@@ -227,10 +221,6 @@ process run_nextstrain_all_vcf {
     shell:
         """
         set -eu
-        
-        augur index \
-            --sequences !{alignment} \
-            --output sequence_index.tsv
 
         augur tree \
             --alignment !{alignment} \
@@ -270,8 +260,7 @@ process run_nextstrain_all {
     container 'nextstrain/base:build-20230411T103027Z'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "process_medium"
 
     input:
         path metadata
@@ -287,10 +276,6 @@ process run_nextstrain_all {
     shell:
         """
         set -eu
-
-        augur index \
-            --sequences !{alignment} \
-            --output sequence_index.tsv
 
         augur tree \
             --alignment !{alignment} \
