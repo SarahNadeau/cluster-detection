@@ -200,8 +200,7 @@ process augur_aggregate_2_filters {
 
 // run the whole nextstrain workflow *after filtering*, including export to auspice for visualization
 process run_nextstrain_all_vcf {
-    container 'nextstrain/base:build-20230411T103027Z'
-    containerOptions = "--user root"
+    container 'staphb/augur:16.0.3'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     label "proces_medium"
