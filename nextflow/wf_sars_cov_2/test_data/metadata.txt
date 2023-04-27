@@ -1,0 +1,92 @@
+NC_045512v2	Reference genome
+MT520428.1	Conference
+MT520429.1	Conference
+MT520386.1	Conference
+MT520192.1	Conference
+MT520178.1	Conference
+MT520441.1	Conference
+MT520375.1	Conference
+MT520325.1	Conference
+MT520446.1	Conference
+MT520509.1	Conference
+MT520408.1	Conference
+MT520316.1	Conference
+MT520517.1	Conference
+MT520503.1	Conference
+MT520459.1	Conference
+MT520287.1	Conference
+MT520191.1	Conference
+MT520470.1	Conference
+MT520341.1	Conference
+MT520327.1	Conference
+MT520547.1	Conference
+MT520472.1	Conference
+MT520396.1	Conference
+MT520314.1	Conference
+MT520388.1	Conference
+MT520320.1	Conference
+MT520282.1	Conference
+MT520310.1	Conference
+MT520263.1	Skilled Nursing Facility
+MT520374.1	Skilled Nursing Facility
+MT520420.1	Skilled Nursing Facility
+MT520525.1	Skilled Nursing Facility
+MT520464.1	Skilled Nursing Facility
+MT520440.1	Skilled Nursing Facility
+MT520312.1	Skilled Nursing Facility
+MT520222.1	Skilled Nursing Facility
+MT520421.1	Skilled Nursing Facility
+MT520482.1	Skilled Nursing Facility
+MT520510.1	Skilled Nursing Facility
+MT520288.1	Skilled Nursing Facility
+MT520380.1	Skilled Nursing Facility
+MT520530.1	Skilled Nursing Facility
+MT520448.1	Skilled Nursing Facility
+MT520504.1	Skilled Nursing Facility
+MT520248.1	Skilled Nursing Facility
+MT520453.1	Skilled Nursing Facility
+MT520479.1	Skilled Nursing Facility
+MT520196.1	Skilled Nursing Facility
+MT520435.1	Skilled Nursing Facility
+MT520400.1	Skilled Nursing Facility
+MT520407.1	Skilled Nursing Facility
+MT520235.1	Skilled Nursing Facility
+MT520369.1	Skilled Nursing Facility
+MT520216.1	Skilled Nursing Facility
+MT520206.1	Skilled Nursing Facility
+MT520239.1	Skilled Nursing Facility
+MT520318.1	Skilled Nursing Facility
+MT520539.1	Skilled Nursing Facility
+MT520538.1	Skilled Nursing Facility
+MT520324.1	Skilled Nursing Facility
+MT520219.1	Skilled Nursing Facility
+MT520247.1	Skilled Nursing Facility
+MT520173.1	Skilled Nursing Facility
+MT520175.1	Skilled Nursing Facility
+MT520285.1	Skilled Nursing Facility
+MT520270.1	Skilled Nursing Facility
+MT520483.1	Skilled Nursing Facility
+MT520256.1	Skilled Nursing Facility
+MT520244.1	Skilled Nursing Facility
+MT520309.1	Skilled Nursing Facility
+MT520230.1	Skilled Nursing Facility
+MT520208.1	Skilled Nursing Facility
+MT520271.1	Skilled Nursing Facility
+MT520246.1	Skilled Nursing Facility
+MT520349.1	Skilled Nursing Facility
+MT520536.1	Skilled Nursing Facility
+MT520417.1	Skilled Nursing Facility
+MT520232.1	Skilled Nursing Facility
+MT520340.1	Skilled Nursing Facility
+MT520330.1	Skilled Nursing Facility
+MT520226.1	Skilled Nursing Facility
+MT520454.1	Skilled Nursing Facility
+MT520505.1	Skilled Nursing Facility
+MT520507.1	Skilled Nursing Facility
+MT520426.1	Skilled Nursing Facility
+MT520273.1	Skilled Nursing Facility
+MT520529.1	Skilled Nursing Facility
+MT520234.1	Skilled Nursing Facility
+MT520460.1	Skilled Nursing Facility
+MT520300.1	Skilled Nursing Facility
+MT520495.1	Skilled Nursing Facility

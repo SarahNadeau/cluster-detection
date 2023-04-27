@@ -3,8 +3,7 @@ process build_tree {
     container 'staphb/iqtree2:2.2.2.2'
     publishDir(path: "${params.output_folder}/iqtree", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "process_medium"
 
     input: 
         path alignment

@@ -22,15 +22,22 @@ These depend on the outbreak scenario and can be:
 2) stored in a directory with the focal outbreak samples, e.g. `clean_data/all_samples_for_analysis/*.fna`
 
 ### Metadata
-`*_clustertracker_metadata.txt` looks like (no header line):
+`metadata.txt` looks like (no header line):
 | NC_045512v2 | REFERENCE |
 | --- | --- |
 | MT520428.1 | CONF_A |
 | MT520429.1 | CONF_A |
 
-`*_nextstrain_metadata.txt` looks like:
-| strain | virus | date | region | country | division |
+`metadata_nextstrain.csv` looks like:
+| strain | virus | date | region | country | division | 
 | --- | --- | --- | --- | --- | --- |
 | NC_045512v2 | ncov | 2019-12-22 | REFERENCE | China | ? |
-| MT520428.1 | ncov | 2020-03-07 | CONF_A | USA | Massachusetts |
-| MT520429.1 | ncov | 2020-03-08 | CONF_A | USA | Massachusetts |
+| MT520428.1 | ncov | 2020-03-07 | North America | USA | CONF_A |
+| MT520429.1 | ncov | 2020-03-08 | North America | USA | CONF_A |
+
+Note that due to automated context set selection for SARS-CoV-2, the only fields available for trait reconstruction are 'region', 'country', and 'division'.
+For the bacteria workflow, 'region' and 'country' are reconstructed by default and you can specify an additional column to reconstruct if you'd like, e.g. 'location' or 'annotation'.
+The 'divison' metadata column is optional in this case.
+
+Note also that the bacteria workflow uses parsnp, which renames strains to the filename and appends '.ref' to the reference filename. 
+Your metadata strain names need to conform to the parsnp strain names.

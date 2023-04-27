@@ -1,13 +1,5 @@
 // Download Nextstrain-curated dataset
 process download_nextstrain_covid_data {
-    container 'nextstrain/base:build-20230411T103027Z'
-    publishDir(
-        path: "${params.output_folder}/augur", 
-        mode: 'copy',
-        pattern: 'metadata_*')
-
-    cpus 1
-    memory "1 GB"
 
     input:
         val region_name
@@ -41,27 +33,29 @@ process get_proximities {
     container 'staphb/augur:16.0.3'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "process_medium"
 
     input: 
         path context_alignment
         path focal_alignment
         path reference
-        val reference_name
 
     output:
         path "proximities.tsv"
 
-    shell:
+    script:
         """
         set -eu
+        
+        REF_NAME="\$(grep '^>' ${reference} | sed 's/>//')"
+        
         git clone https://github.com/nextstrain/ncov.git ./ncov
+        
         /Python-3.8.0/python ./ncov/scripts/get_distance_to_focal_set.py \
-            --alignment !{context_alignment} \
-            --focal-alignment !{focal_alignment} \
-            --reference !{reference} \
-            --ignore-seqs !{reference_name} \
+            --alignment ${context_alignment} \
+            --focal-alignment ${focal_alignment} \
+            --reference ${reference} \
+            --ignore-seqs \${REF_NAME} \
             --output proximities.tsv
         """
 
@@ -77,8 +71,7 @@ process get_priorities {
     container 'staphb/augur:16.0.3'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "process_medium"
 
     input: 
         path context_alignment
@@ -112,13 +105,29 @@ process get_priorities {
 	"""
 }
 
+// Get list of headers to definitely exclude when filtering for context
+process get_context_exclude_list {
+
+    input:
+        path input_fasta
+        path reference
+    
+    output:
+        path "exclude.txt"
+
+    shell:
+        """
+        grep "^>" !{reference} | sed 's/>//' > exclude.txt
+        grep "^>" !{input_fasta} | sed 's/>//' >> exclude.txt
+        """
+}
+
 // Filter context sequence set based on region and genetic priorities
 process augur_filter {
     container 'staphb/augur:16.0.3'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "process_medium"
 
     input: 
         path metadata
@@ -186,11 +195,10 @@ process augur_aggregate_2_filters {
 
 // run the whole nextstrain workflow *after filtering*, including export to auspice for visualization
 process run_nextstrain_all_vcf {
-    container 'nextstrain/base:build-20230411T103027Z'
+    container 'staphb/augur:16.0.3'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "proces_medium"
 
     input: 
         path metadata
@@ -207,14 +215,10 @@ process run_nextstrain_all_vcf {
     shell:
         """
         set -eu
-        
-        augur index \
-            --sequences !{alignment} \
-            --output sequence_index.tsv
 
         augur tree \
             --alignment !{alignment} \
-	    --vcf-reference !{reference} \
+	        --vcf-reference !{reference} \
             --output tree_raw.nwk
 
         augur refine \
@@ -225,10 +229,6 @@ process run_nextstrain_all_vcf {
             --output-tree tree.nwk \
             --output-node-data branch_lengths.json \
             --timetree \
-            --coalescent opt \
-            --date-confidence \
-            --date-inference marginal \
-	    --keep-polytomies \
             !{other_refine_params}
 
         augur traits \
@@ -251,11 +251,10 @@ process run_nextstrain_all_vcf {
 }
 
 process run_nextstrain_all {
-    container 'nextstrain/base:build-20230411T103027Z'
+    container 'staphb/augur:16.0.3'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
-    cpus 2
-    memory "1 GB"
+    label "process_medium"
 
     input:
         path metadata
@@ -272,10 +271,6 @@ process run_nextstrain_all {
         """
         set -eu
 
-        augur index \
-            --sequences !{alignment} \
-            --output sequence_index.tsv
-
         augur tree \
             --alignment !{alignment} \
             --output tree_raw.nwk
@@ -287,10 +282,6 @@ process run_nextstrain_all {
             --output-tree tree.nwk \
             --output-node-data branch_lengths.json \
             --timetree \
-            --coalescent opt \
-            --date-confidence \
-            --date-inference marginal \
-	    --keep-polytomies \
             !{other_refine_params}
 
         augur traits \

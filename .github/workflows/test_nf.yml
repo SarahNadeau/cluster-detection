@@ -1,0 +1,29 @@
+name: Test NF workflows
+
+on:
+  push:
+    branches:
+      - main
+      - traverse-mat
+  workflow_dispatch:
+
+jobs:
+  test-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Set up nextflow
+        uses: nf-core/setup-nextflow@v1.2.0
+
+      - name: Run bacteria workflow 
+        run: |
+          cd ${{ github.workspace }}/nextflow/wf_bacteria
+          ./run_wf_test.sh
+
+      - name: Run sars-cov-2 workflow 
+        run: |
+          cd ${{ github.workspace }}/nextflow/wf_sars_cov_2
+          ./run_wf_test.sh
+
