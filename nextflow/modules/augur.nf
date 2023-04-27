@@ -1,10 +1,5 @@
 // Download Nextstrain-curated dataset
 process download_nextstrain_covid_data {
-    container 'nextstrain/base:build-20230411T103027Z'
-    publishDir(
-        path: "${params.output_folder}/augur", 
-        mode: 'copy',
-        pattern: 'metadata_*')
 
     input:
         val region_name
@@ -256,7 +251,7 @@ process run_nextstrain_all_vcf {
 }
 
 process run_nextstrain_all {
-    container 'nextstrain/base:build-20230411T103027Z'
+    container 'staphb/augur:16.0.3'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     label "process_medium"
