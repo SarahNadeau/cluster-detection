@@ -28,7 +28,7 @@ These depend on the outbreak scenario and can be:
 | MT520428.1 | CONF_A |
 | MT520429.1 | CONF_A |
 
-`metadata_nextstrain.txt` looks like:
+`metadata_nextstrain.csv` looks like:
 | strain | virus | date | region | country | division | 
 | --- | --- | --- | --- | --- | --- |
 | NC_045512v2 | ncov | 2019-12-22 | REFERENCE | China | ? |

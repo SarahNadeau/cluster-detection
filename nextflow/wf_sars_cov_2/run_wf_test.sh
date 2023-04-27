@@ -8,5 +8,4 @@ nextflow \
     run \
     -c ../nextflow.config \
     analyze_clusters_sars_cov_2.nf \
-    -profile docker \
-    -resume
+    -profile docker
