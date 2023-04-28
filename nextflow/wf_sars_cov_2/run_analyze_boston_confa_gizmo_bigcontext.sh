@@ -27,4 +27,5 @@ nextflow \
     --filter_similarity_specs "--min-length 20000 --max-date '2020-07-01' --subsample-max-sequences 100" \
     --filter_geocontext_specs "--min-length 20000 --max-date '2020-07-01' --group-by region year month --subsample-max-sequences 200" \
     --outgroup_taxon "NC_045512v2" \
-    --nextstrain_refine_params "--coalescent opt --date-confidence --clock-rate 0.0008 --clock-std-dev 0.004 --root NC_045512v2"
+    --nextstrain_refine_params "--coalescent opt --date-confidence --clock-rate 0.0008 --clock-std-dev 0.004 --root NC_045512v2" \
+    -stub-run
