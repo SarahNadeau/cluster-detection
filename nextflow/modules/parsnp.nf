@@ -13,6 +13,7 @@ process get_snps_and_tree {
         path "parsnp/parsnp.vcf", emit: vcf
         path "parsnp/parsnp.tree", emit: tree
         path "snp_alignment.fasta", emit: snp_alignment
+        path "parsnp/*.log"
 
     shell:
         """
