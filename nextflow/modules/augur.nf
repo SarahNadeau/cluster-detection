@@ -30,7 +30,7 @@ process download_nextstrain_covid_data {
 
 // Get proximity list of most related context sequences for a focal set
 process get_proximities {
-    container 'staphb/augur:21.1.0'
+    container 'snads/augur:21.1.0'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     label "process_medium"
@@ -68,7 +68,7 @@ process get_proximities {
 
 // Get priority ranking of most related context sequences for a focal set
 process get_priorities {
-    container 'staphb/augur:21.1.0'
+    container 'snads/augur:21.1.0'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     label "process_medium"
@@ -124,7 +124,7 @@ process get_context_exclude_list {
 
 // Filter context sequence set based on region and genetic priorities
 process augur_filter {
-    container 'staphb/augur:21.1.0'
+    container 'snads/augur:21.1.0'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     label "process_medium"
@@ -195,7 +195,7 @@ process augur_aggregate_2_filters {
 
 // run the whole nextstrain workflow *after filtering*, including export to auspice for visualization
 process run_nextstrain_all_vcf {
-    container 'staphb/augur:21.1.0'
+    container 'snads/augur:21.1.0'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     label "proces_medium"
@@ -251,7 +251,7 @@ process run_nextstrain_all_vcf {
 }
 
 process run_nextstrain_all {
-    container 'staphb/augur:21.1.0'
+    container 'snads/augur:21.1.0'
     publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     label "process_medium"
