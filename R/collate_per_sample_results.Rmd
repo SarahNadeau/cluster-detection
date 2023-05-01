@@ -8,13 +8,13 @@ library(ape)
 
 # Analysis-specific parameters
 outbreak_annotation <- "CONF_A"
-data_dir <- "nextflow/results/boston_confa_2023-04-21T13:14:43.502924-07:00"
+data_dir <- "clean_results/boston_confa"
 full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
 outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
 location_colname <- "division"
 
 # outbreak_annotation <- "URMC"
-# data_dir <- "nextflow/results/urmc_klebsiella_2023-04-21T10:26:45.975059-07:00"
+# data_dir <- "clean_results/urmc"
 # full_metadata <- read.csv(paste0(data_dir, "/nextstrain_metadata.csv"))
 # outbreak_metadata <- full_metadata %>% filter(location == outbreak_annotation)
 # location_colname <- "location"
@@ -27,10 +27,7 @@ clustertracker_results <- read.delim(paste0(data_dir, "/clustertracker/introduct
 
 Get clusters from treetime mugration output
 ```{r}
-# grep "^  tree one = " nextstrain__timetree.nexus | sed "s/  tree one = //g" | sed "s/&/&&NHX:/g" > annotated_tree_tmp.nhx
-# cat annotated_tree_tmp.nhx | sed "s/,num_date/:num_date/g" | sed "s/,location/:location/g" | sed "s/,region/:region/g" | sed "s/,country/:country/g" | sed "s/,div/:div/g" > annotated_tree_tmp2.nhx
-# cat annotated_tree_tmp2.nhx | sed "s/:num_date_CI={[^}]*}//g" > annotated_tree.nhx  # this messes up the parsing by treeio
-mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/augur/annotated_tree.nhx"))
+mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
 node_annotations <- as.data.frame(as_tibble(mugration_treeio))
 mugration_phylo <- ape::as.phylo(mugration_treeio)
 

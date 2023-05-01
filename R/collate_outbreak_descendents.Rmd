@@ -8,24 +8,23 @@ library(caper)
 library(ape)
 
 # Analysis-specific parameters
-outbreak_annotation <- "CONF_A"
-data_dir <- "nextflow/results/boston_confa_2023-04-21T13:14:43.502924-07:00"
-full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
-outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
-location_colname <- "division"
+# outbreak_annotation <- "CONF_A"
+# data_dir <- "clean_results/boston_confa"
+# full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
+# outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
+# location_colname <- "division"
 
-# outbreak_annotation <- "URMC"
-# data_dir <- "nextflow/results/urmc_klebsiella_2023-04-21T10:26:45.975059-07:00"
-# full_metadata <- read.csv(paste0(data_dir, "/nextstrain_metadata.csv"))
-# outbreak_metadata <- full_metadata %>% filter(location == outbreak_annotation)
-# location_colname <- "location"
+outbreak_annotation <- "URMC"
+data_dir <- "clean_results/urmc"
+full_metadata <- read.csv(paste0(data_dir, "/nextstrain_metadata.csv"))
+outbreak_metadata <- full_metadata %>% filter(location == outbreak_annotation)
+location_colname <- "location"
 ```
 
 Get clusters from treetime mugration output
 ```{r}
-mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/augur/annotated_tree.nhx"))
-node_annotations <- as.data.frame(as_tibble(mugration_treeio)) %>%
-    rename("location" = all_of(location_colname))
+mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
+node_annotations <- as.data.frame(as_tibble(mugration_treeio))
 mugration_phylo <- ape::as.phylo(mugration_treeio)
 
 # pre-order tree traversal to find outbreak MRCA nodes
@@ -71,9 +70,14 @@ for (node_idx in outbreak_introductions$child) {
     }
 }
 mugration_descendent_data <- merge(
-    x = descendent_data, y = node_annotations %>% dplyr::select(node, label, location),
-    by.x = "tip", by.y = "node",
-    all.x = T, all.y = F
+    x = descendent_data, 
+    y = node_annotations  %>%
+        rename("location" = all_of(location_colname)) %>% 
+        dplyr::select(node, label, location),
+    by.x = "tip", 
+    by.y = "node",
+    all.x = T, 
+    all.y = F
 )
 ```
 
