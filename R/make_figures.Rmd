@@ -4,110 +4,136 @@ This script is to make figures showing the results.
 library(tidyverse)
 library(ggplot2)
 library(ggtree)
+library(gridExtra)
 
 # Analysis-specific parameters
-data_dir <- "nextflow/results/boston_confa_2023-04-21T13:14:43.502924-07:00"
-outbreak_annotation <- "CONF_A"
-focal_region_annotation <- "Massachusetts"
-focal_outbreak_samples <- c(
-    "MT520428.1",
-    "MT520429.1",
-    "MT520386.1",
-    "MT520192.1",
-    "MT520178.1",
-    "MT520441.1",
-    "MT520375.1",
-    "MT520325.1",
-    "MT520446.1",
-    "MT520509.1",
-    "MT520408.1",
-    "MT520316.1",
-    "MT520517.1",
-    "MT520503.1",
-    "MT520459.1",
-    "MT520287.1",
-    "MT520191.1",
-    "MT520470.1",
-    "MT520341.1",
-    "MT520327.1",
-    "MT520547.1",
-    "MT520472.1",
-    "MT520396.1",
-    "MT520314.1",
-    "MT520388.1",
-    "MT520320.1",
-    "MT520282.1",
-    "MT520310.1")
-
-# data_dir <- "nextflow/results/urmc_klebsiella_2023-04-21T10:26:45.975059-07:00"
-# outbreak_annotation <- "URMC"
-# focal_region_annotation <- "URMC"
-# focal_outbreak_samples <- c(
-#     "GCF_003952105.1_ASM395210v1_genomic.fna",
-#     "GCF_003952055.1_ASM395205v1_genomic.fna",
-#     "GCF_003951125.1_ASM395112v1_genomic.fna",
-#     "GCF_003950635.1_ASM395063v1_genomic.fna",
-#     "GCF_003951615.1_ASM395161v1_genomic.fna",
-#     "GCF_003951535.1_ASM395153v1_genomic.fna",
-#     "GCF_003950575.1_ASM395057v1_genomic.fna",
-#     "GCF_003952905.1_ASM395290v1_genomic.fna",
-#     "GCF_003950595.1_ASM395059v1_genomic.fna",
-#     "GCF_003951195.1_ASM395119v1_genomic.fna",
-#     "GCF_003951575.1_ASM395157v1_genomic.fna",
-#     "GCF_003951635.1_ASM395163v1_genomic.fna",
-#     "GCF_003951115.1_ASM395111v1_genomic.fna",
-#     "GCF_003952145.1_ASM395214v1_genomic.fna",
-#     "GCF_003952035.1_ASM395203v1_genomic.fna")  # These are the CICU outbreak isolates
+data_dir <- list("clean_results/boston_confa", "clean_results/urmc")
+outbreak_annotation <- list("CONF_A", "URMC")
+focal_region_annotation <- list("Massachusetts", "URMC")
+focal_outbreak_samples <- list(
+    "boston" = c(
+        "MT520428.1",
+        "MT520429.1",
+        "MT520386.1",
+        "MT520192.1",
+        "MT520178.1",
+        "MT520441.1",
+        "MT520375.1",
+        "MT520325.1",
+        "MT520446.1",
+        "MT520509.1",
+        "MT520408.1",
+        "MT520316.1",
+        "MT520517.1",
+        "MT520503.1",
+        "MT520459.1",
+        "MT520287.1",
+        "MT520191.1",
+        "MT520470.1",
+        "MT520341.1",
+        "MT520327.1",
+        "MT520547.1",
+        "MT520472.1",
+        "MT520396.1",
+        "MT520314.1",
+        "MT520388.1",
+        "MT520320.1",
+        "MT520282.1",
+        "MT520310.1"),
+    urmc = c(
+        "GCF_003952105.1_ASM395210v1_genomic.fna",
+        "GCF_003952055.1_ASM395205v1_genomic.fna",
+        "GCF_003951125.1_ASM395112v1_genomic.fna",
+        "GCF_003950635.1_ASM395063v1_genomic.fna",
+        "GCF_003951615.1_ASM395161v1_genomic.fna",
+        "GCF_003951535.1_ASM395153v1_genomic.fna",
+        "GCF_003950575.1_ASM395057v1_genomic.fna",
+        "GCF_003952905.1_ASM395290v1_genomic.fna",
+        "GCF_003950595.1_ASM395059v1_genomic.fna",
+        "GCF_003951195.1_ASM395119v1_genomic.fna",
+        "GCF_003951575.1_ASM395157v1_genomic.fna",
+        "GCF_003951635.1_ASM395163v1_genomic.fna",
+        "GCF_003951115.1_ASM395111v1_genomic.fna",
+        "GCF_003952145.1_ASM395214v1_genomic.fna",
+        "GCF_003952035.1_ASM395203v1_genomic.fna")  # These are the CICU outbreak isolates
+)
 
 # Load collated results
-results_per_sample <- read.delim(paste0(data_dir, "/collated_results_per_sample.txt"), sep = " ") %>%
-    mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration")))
-results_per_introduction <- read.delim(paste0(data_dir, "/collated_results_per_introduction.txt"), sep = " ") %>%
-    mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration")))
+results_per_sample <- rbind(
+    read.delim(paste0(data_dir[[1]], "/collated_results_per_sample_with_beast.txt"), sep = " ") %>% 
+        mutate(outbreak = "SARS-CoV-2 superspreading", is_focal = sample %in% focal_outbreak_samples[[1]]),
+    read.delim(paste0(data_dir[[2]], "/collated_results_per_sample_with_beast.txt"), sep = " ") %>% 
+        mutate(outbreak = "K. aerogenes in ICU", is_focal = sample %in% focal_outbreak_samples[[2]])
+    ) %>%
+    mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration", "beast_dta")))
+
+results_per_introduction <- rbind(
+    read.delim(paste0(data_dir[[1]], "/collated_results_per_introduction_with_beast.txt"), sep = " ") %>%
+        mutate(
+            outbreak = "SARS-CoV-2 superspreading", 
+            is_focal = label %in% focal_outbreak_samples[[1]],
+            is_focal_region = tip_location == focal_region_annotation[[1]]),
+    read.delim(paste0(data_dir[[2]], "/collated_results_per_introduction_with_beast.txt"), sep = " ") %>%
+        mutate(
+            outbreak = "K. aerogenes in ICU", 
+            is_focal = label %in% focal_outbreak_samples[[2]],
+            is_focal_region = tip_location == focal_region_annotation[[2]])
+    ) %>%
+    mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration", "beast_dta")))
 ```
 
 Plot number of clusters by method
 ```{r}
 outbreak_clusters_by_method <- results_per_sample %>%
-    filter(sample %in% focal_outbreak_samples) %>%
-    group_by(method) %>%
+    filter(is_focal) %>%
+    group_by(method, outbreak) %>%
     summarise(n_samples = n(), n_clusters = length(unique(introduction_node)))
 
-ggplot(data = outbreak_clusters_by_method) +
-    geom_col(aes(x = method, y = n_clusters)) + 
+outbreak_clusters_by_method_plot <- ggplot(data = outbreak_clusters_by_method) +
+    geom_col(aes(x = method, y = n_clusters)) +
+    facet_grid(. ~ outbreak) +
     theme_bw() + 
-    labs(x = element_blank(), y = "# clusters with focal region samples")
-ggsave(file = paste0(data_dir, "/clusters_by_method.png"), width = 3, height = 4)
+    labs(x = element_blank(), y = "# clusters with outbreak samples") +
+    geom_hline(aes(yintercept = 1), linetype = "dashed")
+
+outbreak_clusters_by_method_plot
 ```
 
 Plot size of sampled outbreak
 ```{r}
 focal_outbreak_introductions <- results_per_introduction %>%
-    filter(label %in% focal_outbreak_samples) %>%
-    dplyr::select(introduction_node, method) %>%
+    filter(is_focal) %>%
+    dplyr::select(introduction_node, method, outbreak) %>%
     unique()
 
 outbreak_spread_by_method <- results_per_introduction %>%
     right_join(focal_outbreak_introductions) %>%  # only consider samples in focal outbreak cluster
-    group_by(method) %>%
+    group_by(method, outbreak) %>%
     summarize(
         n_introduction_nodes = length(unique(introduction_node)),
-        `Context` = sum(!(tip_location %in% c(outbreak_annotation, focal_region_annotation))),
-        `Outbreak` = sum(sum(label %in% focal_outbreak_samples)),
-        `Focal region` = sum(tip_location == focal_region_annotation & !(label %in% focal_outbreak_samples))) %>%
+        `Context` = sum(!is_focal_region & !is_focal),
+        `Outbreak` = sum(is_focal),
+        `Focal region` = sum(is_focal_region & !is_focal)) %>%
     pivot_longer(cols = c(`Context`, `Outbreak`, `Focal region`), names_to = "Sample type")
 
-ggplot(data = outbreak_spread_by_method) +
+outbreak_spread_by_method_plot <- ggplot(data = outbreak_spread_by_method) +
     geom_bar(aes(x = method, y = value, fill = `Sample type`), position = "stack", stat = "identity") +
     theme_bw() +
-    labs(x = element_blank(), y = "# samples in the focal outbreak cluster(s)")
-ggsave(file = paste0(data_dir, "/outbreak_size_by_method.png"), width = 4, height = 4)
+    facet_grid(. ~ outbreak) +
+    theme(legend.position = c(0.37, 0.73), legend.background = element_rect(fill = "white", color = "black", linewidth = 0.25)) +
+    labs(x = element_blank(), y = "Samples in the outbreak cluster(s)")
+
+outbreak_spread_by_method_plot
 ```
 
-Bits and bobs, leftovers
+Plot all in one
 ```{r}
-# ggtree(mugration_treeio) + 
-#     geom_label(aes(label = division)) +
-#     geom_tiplab()
-# ggsave("~/Downloads/tree.png", width = 20, height = 20)   
+png(
+    filename = "clean_results/outbreak_comparison.png", 
+    width = 6.5, height = 6, units = "in", res = 200)
+gridExtra::grid.arrange(
+    outbreak_clusters_by_method_plot,
+    outbreak_spread_by_method_plot,
+    ncol = 1)
+dev.off()
 ```

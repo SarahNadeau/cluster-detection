@@ -8,17 +8,17 @@ library(caper)
 library(ape)
 
 # Analysis-specific parameters
-# outbreak_annotation <- "CONF_A"
-# data_dir <- "clean_results/boston_confa"
-# full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
-# outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
-# location_colname <- "division"
+outbreak_annotation <- "CONF_A"
+data_dir <- "clean_results/boston_confa"
+full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
+outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
+location_colname <- "division"
 
-outbreak_annotation <- "URMC"
-data_dir <- "clean_results/urmc"
-full_metadata <- read.csv(paste0(data_dir, "/nextstrain_metadata.csv"))
-outbreak_metadata <- full_metadata %>% filter(location == outbreak_annotation)
-location_colname <- "location"
+# outbreak_annotation <- "URMC"
+# data_dir <- "clean_results/urmc"
+# full_metadata <- read.csv(paste0(data_dir, "/nextstrain_metadata.csv"))
+# outbreak_metadata <- full_metadata %>% filter(location == outbreak_annotation)
+# location_colname <- "location"
 ```
 
 Get clusters from treetime mugration output

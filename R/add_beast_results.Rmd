@@ -1,0 +1,147 @@
+This script is to add BEAST results (generated independently of the nextflow workflow) to the figures.
+
+```{r}
+library(tidyverse)
+library(treeio)
+```
+
+Load BEAST data
+```{r}
+# data_dir <- "clean_results/boston_confa"
+# beast_treeio <- treeio::read.beast(paste0(data_dir, "/beast_dta/third_try_regions_starting_tree_500000/combined_chains_mcc.tree"))
+# location_col <- 17
+# outbreak_annotation <- "CONF_A"
+
+data_dir <- "clean_results/urmc"
+beast_treeio <- treeio::read.beast(paste0(data_dir, "/beast_dta/third_try_invariant_sites/combined_chains_mcc.tree"))
+location_col <- 14
+outbreak_annotation <- "URMC"
+```
+
+Collate per-sample results
+```{r}
+location_colname <- "location"
+
+node_annotations <- as.data.frame(as_tibble(beast_treeio))
+beast_phylo <- ape::as.phylo(beast_treeio)
+
+# pre-order tree traversal to find outbreak MRCA nodes
+beast_phylo <- ape::reorder.phylo(beast_phylo, order = "postorder", index.only = F)
+postorder_edges <- beast_phylo$edge
+
+# Traverse tree, finding import events
+is_first <- T
+for (i in nrow(postorder_edges):1) {
+    parent <- postorder_edges[i, 1]
+    child <- postorder_edges[i, 2]
+    parent_annotation <- node_annotations[parent, location_colname]
+    child_annotation <- node_annotations[child, location_colname]
+    print(paste("parent:", parent_annotation, "& child:", child_annotation))
+    if (parent == child || child_annotation != parent_annotation) {
+        introduction_data_tmp <- data.frame(
+            parent = parent,
+            child = child,
+            parent_annotation = parent_annotation,
+            child_annotation = child_annotation
+        )
+        if (is_first) {
+            introduction_data <- introduction_data_tmp
+            is_first <- F
+        } else {
+            introduction_data <- rbind(introduction_data, introduction_data_tmp)
+        }
+    }  
+}
+```
+
+Get beast imports in a per-sample tabular format
+```{r}
+root_idx <- postorder_edges[nrow(postorder_edges), 1]
+
+# function to see if a node is the child of an introduction
+get_introduction <- function(node_idx, introduction_data) {
+    print(paste("investigating node", node_idx))
+    if (node_idx %in% introduction_data$child) {
+        return(node_idx)
+    } else if (node_idx == root_idx) {
+        # special case at root: it has to be an introduction
+        return(node_idx)
+    } else {
+        parent <- postorder_edges[which(postorder_edges[, 2] == node_idx), 1]
+        return(get_introduction(parent, introduction_data))
+    }
+}
+
+n_tips <- length(beast_phylo$tip.label)
+is_first <- T
+for (i in 1:n_tips) {
+    sample_data_tmp <- data.frame(
+        sample = beast_phylo$tip.label[i],
+        region = node_annotations[i, location_col],
+        introduction_node = get_introduction(i, introduction_data))
+    if (is_first) {
+        sample_data <- sample_data_tmp
+        is_first <- F
+    } else {
+        sample_data <- rbind(sample_data, sample_data_tmp)
+    }
+}
+
+beast_results <- sample_data %>%
+    group_by(introduction_node) %>%
+    mutate(cluster_size = n()) %>%
+    mutate(method = "beast_dta")
+```
+
+Write out per-sample results
+```{r}
+previous_results <- read.table(
+    paste0(data_dir, "/collated_results_per_sample.txt"),
+    header = T)
+
+write.table(
+    x = rbind(previous_results, beast_results), 
+    file = paste0(data_dir, "/collated_results_per_sample_with_beast.txt"),
+    row.names = F)
+```
+
+Collate results per introduction
+```{r}
+# Get descendents of outbreak introductions
+outbreak_introductions <- introduction_data %>% filter(child_annotation == outbreak_annotation)
+is_first <- T
+for (node_idx in outbreak_introductions$child) {
+    descendent_data_tmp <- data.frame(
+        tip = caper::clade.members(x = node_idx, phy = beast_phylo),
+        introduction_node = node_idx,
+        method = "beast_dta")
+    if (is_first) {
+        descendent_data <- descendent_data_tmp
+        is_first <- F
+    } else {
+        descendent_data <- rbind(descendent_data, descendent_data_tmp)
+    }
+}
+beast_descendent_data <- merge(
+    x = descendent_data, 
+    y = node_annotations  %>%
+        rename("location" = all_of(location_colname)) %>% 
+        dplyr::select(node, label, location),
+    by.x = "tip", 
+    by.y = "node",
+    all.x = T, 
+    all.y = F
+) %>% rename("tip_location" = location)
+```
+
+Write out per-introduction results
+```{r}
+previous_results <- read.table(
+    paste0(data_dir, "/collated_results_per_introduction.txt"),
+    header = T)
+
+write.table(
+    x = rbind(previous_results, beast_descendent_data), 
+    file = paste0(data_dir, "/collated_results_per_introduction_with_beast.txt"),
+    row.names = F)
+```
