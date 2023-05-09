@@ -63,9 +63,12 @@ results_per_sample <- rbind(
     read.delim(paste0(data_dir[[1]], "/collated_results_per_sample_with_beast.txt"), sep = " ") %>% 
         mutate(outbreak = "SARS-CoV-2 superspreading", is_focal = sample %in% focal_outbreak_samples[[1]]),
     read.delim(paste0(data_dir[[2]], "/collated_results_per_sample_with_beast.txt"), sep = " ") %>% 
-        mutate(outbreak = "K. aerogenes in ICU", is_focal = sample %in% focal_outbreak_samples[[2]])
+        mutate(outbreak = "K. aerogenes in CICU", is_focal = sample %in% focal_outbreak_samples[[2]])
     ) %>%
-    mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration", "beast_dta")))
+    mutate(method = factor(
+        method, 
+        levels = c("hivtrace", "clustertracker", "mugration", "beast_dta"),
+        labels = c("HIV-\nTRACE", "ClusterTracker", "augur", "BEAST")))
 
 results_per_introduction <- rbind(
     read.delim(paste0(data_dir[[1]], "/collated_results_per_introduction_with_beast.txt"), sep = " ") %>%
@@ -75,11 +78,14 @@ results_per_introduction <- rbind(
             is_focal_region = tip_location == focal_region_annotation[[1]]),
     read.delim(paste0(data_dir[[2]], "/collated_results_per_introduction_with_beast.txt"), sep = " ") %>%
         mutate(
-            outbreak = "K. aerogenes in ICU", 
+            outbreak = "K. aerogenes in CICU", 
             is_focal = label %in% focal_outbreak_samples[[2]],
             is_focal_region = tip_location == focal_region_annotation[[2]])
     ) %>%
-    mutate(method = factor(method, levels = c("hivtrace", "clustertracker", "mugration", "beast_dta")))
+    mutate(method = factor(
+        method, 
+        levels = c("hivtrace", "clustertracker", "mugration", "beast_dta"),
+        labels = c("HIV-\nTRACE", "ClusterTracker", "augur", "BEAST")))
 ```
 
 Plot number of clusters by method
@@ -111,10 +117,11 @@ outbreak_spread_by_method <- results_per_introduction %>%
     group_by(method, outbreak) %>%
     summarize(
         n_introduction_nodes = length(unique(introduction_node)),
-        `Context` = sum(!is_focal_region & !is_focal),
+        `Other` = sum(!is_focal_region & !is_focal),
         `Outbreak` = sum(is_focal),
         `Focal region` = sum(is_focal_region & !is_focal)) %>%
-    pivot_longer(cols = c(`Context`, `Outbreak`, `Focal region`), names_to = "Sample type")
+    pivot_longer(cols = c(`Other`, `Outbreak`, `Focal region`), names_to = "Sample type") %>%
+    mutate(`Sample type` = factor(`Sample type`, levels = c("Other", "Focal region", "Outbreak")))
 
 outbreak_spread_by_method_plot <- ggplot(data = outbreak_spread_by_method) +
     geom_bar(aes(x = method, y = value, fill = `Sample type`), position = "stack", stat = "identity") +
