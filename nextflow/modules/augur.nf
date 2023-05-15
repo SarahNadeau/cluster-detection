@@ -125,7 +125,6 @@ process get_context_exclude_list {
 // Filter context sequence set based on region and genetic priorities
 process augur_filter {
     container 'snads/augur:21.1.0'
-    publishDir(path: "${params.output_folder}/augur", mode: 'copy')
 
     label "process_medium"
 
@@ -176,7 +175,6 @@ process augur_filter {
 
 // Aggregate focal alignment and filtered context to a final alignment
 process augur_aggregate_2_filters {
-    publishDir(path: "${params.output_folder}/augur", mode: 'copy', pattern: "alignment_plus_filtered_context.fasta")
 
     input:
         path focal_alignment

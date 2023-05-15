@@ -17,7 +17,10 @@ This project aims to be a methods guide and resource for molecular transmission 
 ## Running workflows
 
 Here we'll run some test data through the SARS-CoV-2 and bacterial cluster detection workflows. 
-First, install [Docker](https://docs.docker.com/get-docker/) and [Nextflow](https://www.nextflow.io/).
+First, make sure you have these dependencies:
+* [Docker](https://docs.docker.com/get-docker/)
+* [Nextflow](https://www.nextflow.io/)
+* [python3](https://www.python.org/downloads/)
 
 Then run each workflow:
 ```

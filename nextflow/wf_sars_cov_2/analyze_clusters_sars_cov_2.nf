@@ -20,6 +20,7 @@ params.nextstrain_refine_params = "--coalescent opt --date-confidence --keep-pol
 // Import processes from modules
 include { download_nextstrain_covid_data; get_proximities; get_priorities; run_nextstrain_all } from '../modules/augur.nf'
 include { augur_filter as filter_1; augur_filter as filter_2; augur_aggregate_2_filters; get_context_exclude_list } from '../modules/augur.nf'
+include { add_reference; mask_alignment } from '../modules/alignment_utils.nf'
 include { build_tree } from '../modules/iqtree.nf'
 include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce; pb_to_taxonium; pb_introductions_to_leaves } from '../modules/matutils.nf'
 include { get_metadata_from_nextstrain; add_metadata_to_nextstrain; combine_exclude_files } from '../modules/metadata_utils.nf'
@@ -75,18 +76,21 @@ workflow {
         filter_1.out.filtered_context.join(filter_2.out.filtered_context),
         filter_1.out.filtered_context_metadata.join(filter_2.out.filtered_context_metadata))
 
+    // Mask problematic sites in SARS-CoV-2 alignment
+    masked_alignment = mask_alignment(
+        augur_aggregate_2_filters.out.alignment_plus_filtered_context,
+        mask_sites_vcf,
+        params.reference_name)
+
     // Get clustertracker metadata
     full_metadata = get_metadata_from_nextstrain(
         augur_aggregate_2_filters.out.filtered_context_metadata, 
         input_metadata)
 
     // Run clustertracker to estimate introductions
-    vcf = fasta_to_vcf(
-        augur_aggregate_2_filters.out.alignment_plus_filtered_context, 
-        reference_fasta,
-        mask_sites_vcf)
+    vcf = fasta_to_vcf(masked_alignment)
     tree = build_tree(
-        augur_aggregate_2_filters.out.alignment_plus_filtered_context, 
+        masked_alignment, 
         params.outgroup_taxon)
     mat_pb = build_mat(vcf, tree)
     matutils_introduce(mat_pb, full_metadata)
@@ -106,7 +110,7 @@ workflow {
 
     // Run a SNP-distance based clustering method
     hiv_trace(
-        augur_aggregate_2_filters.out.alignment_plus_filtered_context,
+        masked_alignment,
         reference_fasta,
         params.tn93_distance_threshold,
         params.hiv_trace_min_overlap)
@@ -117,7 +121,7 @@ workflow {
         input_metadata_nextstrain)
     run_nextstrain_all(
         full_metadata_nextstrain,
-        augur_aggregate_2_filters.out.alignment_plus_filtered_context,
+        masked_alignment,
         params.trait_name,
         params.nextstrain_refine_params)
 

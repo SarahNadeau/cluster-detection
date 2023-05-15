@@ -28,8 +28,6 @@ process fasta_to_vcf {
 
     input:
         path alignment
-        path reference
-        path mask_sites_vcf
     
     output:
         path "alignment.vcf"
@@ -37,15 +35,8 @@ process fasta_to_vcf {
     shell:
         """
         set -eu
-        
-        awk '{print}' !{reference} !{alignment} > alignment_w_reference.fasta
 
-        # Convert to VCF, optionally masking some sites
-        if [[ !{mask_sites_vcf} != 'NO_MASK_FILE' ]]; then
-            faToVcf -maskSites=!{mask_sites_vcf} alignment_w_reference.fasta alignment.vcf
-        else
-            faToVcf alignment_w_reference.fasta alignment.vcf
-        fi
+        faToVcf !{alignment} alignment.vcf
         """
 }
 

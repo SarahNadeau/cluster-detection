@@ -64,7 +64,6 @@ process save_metadata {
 
 // Combine two txt files of strains to exclude for augur filter
 process combine_exclude_files {
-    publishDir(path: "${params.output_folder}", mode: 'copy')
 
     input:
         path exclude_strains_1
