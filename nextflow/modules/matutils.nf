@@ -64,6 +64,8 @@ process matutils_introduce {
     container 'pathogengenomics/usher@sha256:a311c7b896279a41a36608c29c8ecdc5b8420c01b27ffad160a1867098051c01'
     publishDir(path: "${params.output_folder}/clustertracker", mode: 'copy')
 
+    label "proces_low"
+
     input:
         path pb 
         path metadata 

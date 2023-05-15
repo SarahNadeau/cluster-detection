@@ -192,36 +192,29 @@ process augur_aggregate_2_filters {
         """
 }
 
-// run the whole nextstrain workflow *after filtering*, including export to auspice for visualization
-process run_nextstrain_all_vcf {
+process augur_refine {
     container 'snads/augur:21.1.0'
-    publishDir(path: "${params.output_folder}/augur", mode: 'copy')
+    publishDir(path: "${params.output_folder}/nextstrain", mode: 'copy')
 
     label "proces_medium"
 
     input: 
+        path tree
         path metadata
         path alignment
 	    path reference
-        val trait_name
         val other_refine_params
 
     output:
-        path "auspice.json", emit: auspice_json
-        path "tree_raw.nwk"
-        path "tree.nwk"
+        path "tree.nwk", emit: tree
+        path "branch_lengths.json", emit: branch_lengths
 
     shell:
         """
         set -eu
 
-        augur tree \
-            --alignment !{alignment} \
-	        --vcf-reference !{reference} \
-            --output tree_raw.nwk
-
         augur refine \
-            --tree tree_raw.nwk \
+            --tree !{tree} \
             --alignment !{alignment} \
 	        --vcf-reference !{reference} \
             --metadata !{metadata} \
@@ -229,74 +222,54 @@ process run_nextstrain_all_vcf {
             --output-node-data branch_lengths.json \
             --timetree \
             !{other_refine_params}
-
-        augur traits \
-            --tree tree.nwk \
-            --metadata !{metadata} \
-            --output-node-data traits.json \
-            --columns region country !{trait_name} \
-            --confidence
-
-        # skipping reconstruction of nucleotide and amino acid mutations
-
-        augur export v2 \
-            --tree tree.nwk \
-            --metadata !{metadata} \
-            --node-data branch_lengths.json \
-                        traits.json \
-            --color-by-metadata region country !{trait_name} \
-            --output auspice.json
         """
 }
 
-process run_nextstrain_all {
+process augur_traits {
     container 'snads/augur:21.1.0'
-    publishDir(path: "${params.output_folder}/augur", mode: 'copy')
+    publishDir(path: "${params.output_folder}/augur_traits", mode: 'copy')
 
-    label "process_medium"
+    label "proces_low"
 
-    input:
+    input: 
+        path tree
         path metadata
-        path alignment
         val trait_name
-        val other_refine_params
 
     output:
-        path "auspice.json", emit: auspice_json
-        path "tree_raw.nwk"
-        path "tree.nwk"
+        path "traits.json", emit: traits
 
     shell:
         """
-        set -eu
-
-        augur tree \
-            --alignment !{alignment} \
-            --output tree_raw.nwk
-
-        augur refine \
-            --tree tree_raw.nwk \
-            --alignment !{alignment} \
-            --metadata !{metadata} \
-            --output-tree tree.nwk \
-            --output-node-data branch_lengths.json \
-            --timetree \
-            !{other_refine_params}
-
         augur traits \
-            --tree tree.nwk \
+            --tree !{tree} \
             --metadata !{metadata} \
             --output-node-data traits.json \
             --columns region country !{trait_name} \
             --confidence
+        """
+}
 
-        # skipping reconstruction of nucleotide and amino acid mutations
+process augur_export {
+    container 'snads/augur:21.1.0'
+    publishDir(path: "${params.output_folder}/augur_traits", mode: 'copy')
 
+    input: 
+        path tree
+        path metadata
+        path traits
+        path branch_lengths
+        val trait_name
+
+    output:
+        path "auspice.json", emit: auspice_json
+
+    shell:
+        """
         augur export v2 \
-            --tree tree.nwk \
+            --tree !{tree} \
             --metadata !{metadata} \
-            --node-data branch_lengths.json \
-                        traits.json \
+            --node-data !{traits} !{branch_lengths} \
             --color-by-metadata region country !{trait_name} \
             --output auspice.json
         """

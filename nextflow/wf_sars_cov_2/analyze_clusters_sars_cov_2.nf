@@ -15,16 +15,16 @@ params.outgroup_taxon = "NC_045512v2" // root tree using reference sequence as o
 params.mask_sites_vcf = "assets/problematic_sites_sarsCov2.vcf" // vcf file of problematic sites to mask
 params.tn93_distance_threshold = 0.0000667 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site)
 params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
-params.nextstrain_refine_params = "--coalescent opt --date-confidence --keep-polytomies --clock-rate 0.0008 --clock-std-dev 0.004 --root NC_045512v2" // how should refine create a rooted timetree? See https://docs.nextstrain.org/projects/augur/en/stable/usage/cli/refine.html
+params.nextstrain_refine_params = "--coalescent opt --date-confidence --clock-rate 0.0008 --clock-std-dev 0.004 --root NC_045512v2" // how should refine create a rooted timetree? See https://docs.nextstrain.org/projects/augur/en/stable/usage/cli/refine.html
 
 // Import processes from modules
-include { download_nextstrain_covid_data; get_proximities; get_priorities; run_nextstrain_all } from '../modules/augur.nf'
+include { download_nextstrain_covid_data; get_proximities; get_priorities } from '../modules/augur.nf'
 include { augur_filter as filter_1; augur_filter as filter_2; augur_aggregate_2_filters; get_context_exclude_list } from '../modules/augur.nf'
+include { augur_refine; augur_traits; augur_export } from '../modules/augur.nf'
 include { add_reference; mask_alignment } from '../modules/alignment_utils.nf'
 include { build_tree } from '../modules/iqtree.nf'
 include { align_sequences; fasta_to_vcf; build_mat; matutils_introduce; pb_to_taxonium; pb_introductions_to_leaves } from '../modules/matutils.nf'
 include { get_metadata_from_nextstrain; add_metadata_to_nextstrain; combine_exclude_files } from '../modules/metadata_utils.nf'
-include { treetime_mugration; convert_tree_to_nhx } from '../modules/treetime.nf'
 include { hiv_trace } from '../modules/hiv_trace.nf'
 
 // The workflow itself
@@ -70,7 +70,6 @@ workflow {
         combine_exclude_files.out.exclude_strains_combined,
         Channel.value("false"), // don't use genetic similarity here
         params.filter_geocontext_specs)
-
     augur_aggregate_2_filters(
         focal_alignment,
         filter_1.out.filtered_context.join(filter_2.out.filtered_context),
@@ -82,16 +81,16 @@ workflow {
         mask_sites_vcf,
         params.reference_name)
 
-    // Get clustertracker metadata
-    full_metadata = get_metadata_from_nextstrain(
-        augur_aggregate_2_filters.out.filtered_context_metadata, 
-        input_metadata)
-
-    // Run clustertracker to estimate introductions
-    vcf = fasta_to_vcf(masked_alignment)
+    // Construct a maximum-likelihood phylogeny
     tree = build_tree(
         masked_alignment, 
         params.outgroup_taxon)
+
+    // Run clustertracker to estimate introductions
+    full_metadata = get_metadata_from_nextstrain(
+        augur_aggregate_2_filters.out.filtered_context_metadata, 
+        input_metadata)
+    vcf = fasta_to_vcf(masked_alignment)
     mat_pb = build_mat(vcf, tree)
     matutils_introduce(mat_pb, full_metadata)
     pb_to_taxonium(
@@ -101,13 +100,6 @@ workflow {
         mat_pb, 
         matutils_introduce.out.introductions_tsv)
 
-    // Run nextstrain mugration to estimate ancestral locations
-    treetime_mugration(
-        tree,
-        full_metadata,
-        params.trait_name)
-    convert_tree_to_nhx(treetime_mugration.out.annotated_tree_nexus)
-
     // Run a SNP-distance based clustering method
     hiv_trace(
         masked_alignment,
@@ -115,14 +107,26 @@ workflow {
         params.tn93_distance_threshold,
         params.hiv_trace_min_overlap)
 
-    // Run nextstrain mugration in the context of a nextstrain workflow
+
+    // Run nextstrain augur
     full_metadata_nextstrain = add_metadata_to_nextstrain(
         augur_aggregate_2_filters.out.filtered_context_metadata,
         input_metadata_nextstrain)
-    run_nextstrain_all(
+    augur_refine(
+        tree,
         full_metadata_nextstrain,
         masked_alignment,
-        params.trait_name,
+	    reference_fasta,
         params.nextstrain_refine_params)
+    augur_traits(
+        augur_refine.out.tree,
+        full_metadata_nextstrain,
+        params.trait_name)
+    augur_export(
+        augur_refine.out.tree,
+        full_metadata_nextstrain,
+        augur_traits.out.traits,
+        augur_refine.out.branch_lengths,
+        params.trait_name)
 
 }

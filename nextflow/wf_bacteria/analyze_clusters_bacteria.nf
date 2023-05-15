@@ -9,15 +9,14 @@ params.trait_name = "location" // colname in metadata for trait to reconstruct
 params.output_folder = "results_$workflow.start"  // where results files will be saved to
 params.tn93_distance_threshold = 0.1 // genetic distance (under TN93 model) cutoff for clustering sequences (units are substitutions/site) 
 params.hiv_trace_min_overlap = 1  // minimum number non-gap bases that must overlap for HIV-TRACE to calculate genetic distance (must be non-zero)
-params.nextstrain_refine_params = "--coalescent opt --keep-polytomies --root reference.fasta.ref" // how should refine create a rooted timetree? See https://docs.nextstrain.org/projects/augur/en/stable/usage/cli/refine.html
+params.nextstrain_refine_params = "--coalescent opt --root reference.fasta.ref" // how should refine create a rooted timetree? See https://docs.nextstrain.org/projects/augur/en/stable/usage/cli/refine.html
 
 // Import processes from modules
 include { get_snps_and_tree } from '../modules/parsnp.nf'
 include { save_metadata } from '../modules/metadata_utils.nf'
 include { build_mat; matutils_introduce; pb_to_taxonium; pb_introductions_to_leaves } from '../modules/matutils.nf'
-include { treetime_mugration; convert_tree_to_nhx } from '../modules/treetime.nf'
 include { hiv_trace} from '../modules/hiv_trace.nf'
-include { run_nextstrain_all_vcf } from '../modules/augur.nf'
+include { augur_refine; augur_traits; augur_export } from '../modules/augur.nf'
 
 // The workflow itself
 workflow {
@@ -43,13 +42,6 @@ workflow {
         mat_pb, 
         matutils_introduce.out.introductions_tsv)
 
-    // Run nextstrain mugration to estimate ancestral locations
-    treetime_mugration(
-        get_snps_and_tree.out.tree,
-        input_metadata_nextstrain,
-        params.trait_name)
-    convert_tree_to_nhx(treetime_mugration.out.annotated_tree_nexus)
-
     // Run a SNP-distance based clustering method
     hiv_trace(
         get_snps_and_tree.out.snp_alignment,
@@ -57,12 +49,22 @@ workflow {
         params.tn93_distance_threshold,
         params.hiv_trace_min_overlap)
 
-    // Run nextstrain mugration in the context of a nextstrain workflow
-    run_nextstrain_all_vcf(
+    // Run nextstrain augur
+    augur_refine(
+        get_snps_and_tree.out.tree,
         input_metadata_nextstrain,
-        get_snps_and_tree.out.vcf,
+        get_snps_and_tree.out.snp_alignment,
 	    reference_fasta,
-        params.trait_name,
-        Channel.value(params.nextstrain_refine_params))
+        params.nextstrain_refine_params)
+    augur_traits(
+        augur_refine.out.tree,
+        input_metadata_nextstrain,
+        params.trait_name)
+    augur_export(
+        augur_refine.out.tree,
+        input_metadata_nextstrain,
+        augur_traits.out.traits,
+        augur_refine.out.branch_lengths,
+        params.trait_name)
 
 }

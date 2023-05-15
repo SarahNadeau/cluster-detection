@@ -7,6 +7,8 @@ process hiv_trace {
     container 'snads/hivtrace:0.5.0'
     publishDir(path: "${params.output_folder}/hiv_trace", mode: 'copy')
 
+    label "proces_low"
+
     input:
         path input_fasta
         path reference
