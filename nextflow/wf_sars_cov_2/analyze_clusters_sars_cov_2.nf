@@ -121,6 +121,4 @@ workflow {
         params.trait_name,
         params.nextstrain_refine_params)
 
-    // TODO: run BEAST1 DTA to estiamte ancestral locations
-
 }

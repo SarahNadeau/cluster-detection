@@ -1,27 +1,61 @@
-# Molecular cluster detection project
+# Molecular transmission cluster detection project
 
-This project aims to be a methods comparison and guide for molecular cluster detection for public health.
+This project aims to be a methods guide and resource for molecular transmission cluster detection for public health.
+<!-- The full write-up is available at TODO. -->
 
-## Repository structure
-The project includes several case-study datasets in [clean_data](./clean_data/) and workflows to run several cluster detection methods on these data in [nextflow](./nextflow/).
+## Methods implemented:
+* HIV-TRACE
+* ClusterTracker (matUtils introduce)
+* Nextstrain's _augur_
 
-Re-usable nextflow processes are in [modules](./nextflow/modules/).
+## Resources:
+* [clean_data](./clean_data/): Collated metadata for one bacterial, one viral outbreak with ground-truth clustering
+* [modules](./nextflow/modules/): Re-usable nextflow processes implementing the different cluster detection methods 
+* [wf_bacteria](./nextflow/wf_bacteria/): A nextflow workflow to run the three methods on the bacterial outbreak data set
+* [wf_sars_cov_2](./nextflow/wf_sars_cov_2/): A nextflow workflow to run the three methods on the SARS-CoV-2 outbreak data set
 
-## Inputs
-Each dataset needs sequence data from a focal outbreak, context sequences for comparison, an appropriate reference genome for alignment, and metadata files.
+## Running workflows
 
-### A reference file:  
-* reference_NC_045512v2.fa
+Here we'll run some test data through the SARS-CoV-2 and bacterial cluster detection workflows. 
+First, install [Docker](https://docs.docker.com/get-docker/) and [Nextflow](https://www.nextflow.io/).
 
-### Focal outbreak sequences:
-* sars_cov_2_boston_confa_outbreak.fasta
+Then run each workflow:
+```
+# SARS-CoV-2 test data
+cd nextflow/wf_sars_cov_2
+nextflow \
+    run \
+    -c ../nextflow.config \
+    analyze_clusters_sars_cov_2.nf \
+    -profile docker
 
-### Context sequences
-These depend on the outbreak scenario and can be:
-1) downloaded by the pipeline, e.g. in [analyze_boston_confa.nf](./nextflow/analyze_boston_confa.nf)
-2) stored in a directory with the focal outbreak samples, e.g. `clean_data/all_samples_for_analysis/*.fna`
+# PhiX bacterial test data
+cd ../wf_bacteria
+nextflow \
+    run \
+    -c ../nextflow.config \
+    analyze_clusters_bacteria.nf \
+    -profile docker
+```
 
-### Metadata
+## Ananlyzing your own data
+
+Each workflow requires the following inputs:
+* A reference sequence for alignment and to root the phylogeny
+* Focal outbreak genome sequences
+    * SARS-CoV-2: FASTA-format assemblies, all stored in the same file
+    * Bacteria: FASTA-format assemblies stored in a directory, 1 assembly per file
+* Context genome sequences for comparison, to represent generally circulating strains
+    * SARS-CoV-2: downloaded by the workflow using Nextstrain's data resources
+    * Bacteria: FASTA-format assemblies stored in the same directory as outbreak sequences, 1 assembly per file
+* Metadata
+    * Two metadata files required, one in ClusterTracker format, one in Nextstrain format, see below for examples
+    * For SARS-CoV-2, metadata columns must match the example exactly due to using Nextstrain's data resources
+    * For bacteria, 'region' and 'country' are expected, and you can specify an additional column if desired, e.g. 'host type' or 'division'
+    * For bacteria, the ParSNP core genome alignment tool renames strains to the FASTA filename and appends '.ref' to the reference genome. Metadata strain names must conform to this format.
+
+### Example metadata files:
+
 `metadata.txt` looks like (no header line):
 | NC_045512v2 | REFERENCE |
 | --- | --- |
@@ -34,10 +68,3 @@ These depend on the outbreak scenario and can be:
 | NC_045512v2 | ncov | 2019-12-22 | REFERENCE | China | ? |
 | MT520428.1 | ncov | 2020-03-07 | North America | USA | CONF_A |
 | MT520429.1 | ncov | 2020-03-08 | North America | USA | CONF_A |
-
-Note that due to automated context set selection for SARS-CoV-2, the only fields available for trait reconstruction are 'region', 'country', and 'division'.
-For the bacteria workflow, 'region' and 'country' are reconstructed by default and you can specify an additional column to reconstruct if you'd like, e.g. 'location' or 'annotation'.
-The 'divison' metadata column is optional in this case.
-
-Note also that the bacteria workflow uses parsnp, which renames strains to the filename and appends '.ref' to the reference filename. 
-Your metadata strain names need to conform to the parsnp strain names.
