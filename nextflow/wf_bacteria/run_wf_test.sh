@@ -8,4 +8,5 @@ nextflow \
     run \
     -c ../nextflow.config \
     analyze_clusters_bacteria.nf \
-    -profile docker
+    -profile docker \
+    -with-report analyze_clusters_bacteria.html

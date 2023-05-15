@@ -20,5 +20,5 @@ nextflow \
     --reference_fasta "../../clean_data/klebsiella_malek_urmc/reference_NC_015663v1.fna" \
     --trait_name "location" \
     --nextstrain_refine_params "--coalescent opt --root reference_NC_015663v1.fna.ref" \
-    -resume \
+    -with-report klebsiella_malek_urmc_benchmark.html \
     -stub-run  # using cached results from 28.04.2023
