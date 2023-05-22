@@ -7,8 +7,6 @@ library(ape)
 
 # Analysis-specific parameters
 run_names <- c(
-    "main",
-    "new_tree",
     "replicate_1",
     "replicate_2",
     "replicate_3")
@@ -205,8 +203,7 @@ for (run_name in run_names) {
     ### Get clusters from hiv-trace output ###
 
     hivtrace_descendent_data <- rbind(cluster_results, singleton_results) %>% 
-        mutate(location = case_when(
-            sample %in% outbreak_sample_names ~ outbreak_annotation, T ~ "Other")) %>%
+        left_join(full_metadata_tmp, by = c("sample" = "strain")) %>%
         mutate(tip = sample, label = sample, method = "hivtrace") %>%
         dplyr::select(tip, introduction_node, method, label, location)
 

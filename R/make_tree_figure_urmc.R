@@ -66,7 +66,7 @@ clustertracker_tipdata <- per_sample_results %>%
     mutate(location_to_color = case_when(
         sample == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "Focal region",
         sample %in% focal_outbreak_samples ~ "Outbreak",
-        T ~ "Other region"))
+        T ~ "Other (divisional) region"))
 
 augur_outbreak_mrca <- ape::getMRCA(
     phy = as.phylo(augur_tree),
@@ -82,10 +82,10 @@ augur_tipdata <- as_tibble(augur_outbreak_tree) %>%
     mutate(location_to_color = case_when(
         label == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "Focal region",
         location == "URMC" ~ "Outbreak",
-        T ~ "Other region")) %>%
+        T ~ "Other (divisional) region")) %>%
     mutate(location_to_color = factor(
         location_to_color, 
-        levels = c("Outbreak", "Focal region", "Other region")))
+        levels = c("Outbreak", "Focal region", "Other (divisional) region")))
 
 beast_outbreak_mrca <- ape::getMRCA(
     phy = as.phylo(beast_tree), 
@@ -101,7 +101,7 @@ beast_tipdata <- as_tibble(beast_outbreak_tree) %>%
     mutate(location_to_color = case_when(
         label == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "Focal region",
         location == "URMC" ~ "Outbreak",
-        T ~ "Other region"))
+        T ~ "Other (global) region"))
 
 # Define standard colors
 gg_color_hue <- function(n) {
@@ -109,16 +109,17 @@ gg_color_hue <- function(n) {
   hcl(h = hues, l = 65, c = 100)[1:n]
 }
 
-region_colors <- c(gg_color_hue(3))
-names(region_colors) <- c("Other region", "Outbreak", "Focal region")
-
+shared_color_scale <- scale_color_manual(
+    breaks = c("Outbreak", "Focal region", "Other (divisional) region", "Other (global) region"),
+    values = c("#00BA38", "#619CFF", "#F8766D", "#C77CFF"),
+    limits = c("Outbreak", "Focal region", "Other (divisional) region", "Other (global) region")) 
 shared_theme <- theme(legend.title = element_blank())
-tiplab_size <- 1.8
+tiplab_size <- 2
 
 # Plot clustertracker tree
 clustertracker_plot <- ggtree(tr = clustertracker_outbreak_tree) %<+% clustertracker_tipdata +
     geom_tiplab(aes(label = introduction_node, color = location_to_color), size = tiplab_size) +
-    scale_color_manual(values = region_colors) +
+    shared_color_scale +
     shared_theme +
     lims(x = c(NA, 0.0025)) +
     geom_treescale(label = "subs/site", fontsize = 2)  # y coord relative to # sequences
@@ -130,7 +131,7 @@ augur_plot <- ggtree(
     mrsd = "2017-06-01", 
     as.Date = T) %<+% augur_tipdata +
     geom_tiplab(aes(label = location_to_plot), size = tiplab_size) +
-    scale_color_manual(values = region_colors) +
+    shared_color_scale +
     theme_tree2() +
     scale_x_date(limits = c(as.Date("1980-01-01"), as.Date("2032-06-01"))) +
     shared_theme
@@ -140,7 +141,7 @@ beast_plot <- ggtree(
     tr = beast_outbreak_tree, 
     aes(color = location_to_color)) %<+% beast_tipdata +
     geom_tiplab(aes(label = location_to_plot), size = tiplab_size) +
-    scale_color_manual(values = region_colors) +
+    shared_color_scale +
     geom_nodelab(
         aes(label = round(as.numeric(posterior) * 100, digits = 0)), 
         size = tiplab_size,
@@ -161,7 +162,7 @@ graph <- igraph::graph_from_edgelist(cluster_matrix, directed = F)
 V(graph)$color <- case_when(
     V(graph)$name %in% focal_outbreak_samples ~ "Outbreak", 
     V(graph)$name == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "Focal region",
-    T ~ "Other region")
+    T ~ "Other (divisional) region")
 # Label nodes
 name_to_label <- metadata$location
 names(name_to_label) <- metadata$strain
@@ -169,14 +170,14 @@ V(graph)$label <- case_when(
     V(graph)$name %in% focal_outbreak_samples ~ "URMC", 
     V(graph)$name == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "URMC\n(unlinked)",
     T ~ name_to_label[V(graph)$name])
-V(graph)$label.color <- "black"
+V(graph)$label.color <- V(graph)$color
 V(graph)$label.cex <- 0.8
 
 hivtrace_plot <- ggraph::ggraph(graph, layout = "igraph", algorithm = 'kk') +
     ggraph::geom_edge_link(alpha = 0.2) +
-    ggraph::geom_node_point(aes(color = color), size = 3) +
-    ggraph::geom_node_text(aes(label = label), size = tiplab_size) +
-    scale_color_manual(values = region_colors) +
+    # ggraph::geom_node_point(aes(color = color), size = 3) +
+    ggraph::geom_node_text(aes(color = color, label = label), size = tiplab_size) +
+    shared_color_scale +
     theme(axis.line=element_blank(),
       axis.text.x=element_blank(),
       axis.text.y=element_blank(),
@@ -189,7 +190,7 @@ hivtrace_plot <- ggraph::ggraph(graph, layout = "igraph", algorithm = 'kk') +
       panel.grid.minor=element_blank(),
       plot.background=element_blank())
 # Plot all trees together
-legend_plot <- ggpubr::as_ggplot(ggpubr::get_legend(hivtrace_plot))
+legend_plot <- ggpubr::as_ggplot(ggpubr::get_legend(augur_plot))
 plot_list(
     clustertracker_plot + theme(legend.position = "none"), 
     augur_plot + theme(legend.position = "none"), 

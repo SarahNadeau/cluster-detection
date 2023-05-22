@@ -168,7 +168,10 @@ outbreak_spread_by_method <- results_per_introduction %>%
         `Outbreak` = sum(is_focal),
         `Focal region` = sum(is_focal_region & !is_focal)) %>%
     pivot_longer(cols = c(`Other`, `Outbreak`, `Focal region`), names_to = "Sample type") %>%
-    mutate(`Sample type` = factor(`Sample type`, levels = c("Outbreak", "Focal region", "Other")))
+    mutate(`Sample type` = factor(
+        `Sample type`, 
+        levels = c("Outbreak", "Focal region", "Other"),
+        labels = c("Outbreak", "Focal region", "Other (divisional) region")))
 
 outbreak_spread_by_method_summary <- outbreak_spread_by_method %>%
     group_by(method, outbreak, `Sample type`) %>%
@@ -184,7 +187,7 @@ outbreak_spread_by_method_summary <- outbreak_spread_by_method %>%
         max_value_to_plot = case_when(
             outbreak == "K. aerogenes in CICU" ~ NA,
             method == "BEAST" ~ NA,
-            T ~ max_value))  # no replicates run, don't show errbars
+            T ~ max_value)) # no replicates run, don't show errbars
 
 gg_color_hue <- function(n) {
   hues = seq(15, 375, length = n + 1)
@@ -197,7 +200,7 @@ outbreak_spread_by_method_plot <- ggplot(data = outbreak_spread_by_method_summar
     theme_bw() +
     scale_fill_manual(values = rev(gg_color_hue(3))) +
     facet_grid(. ~ outbreak) +
-    theme(legend.position = c(0.37, 0.73), legend.background = element_rect(fill = "white", color = "black", linewidth = 0.25)) +
+    theme(legend.position = c(0.335, 0.65), legend.background = element_rect(fill = "white", color = "black", linewidth = 0.25)) +
     labs(x = element_blank(), y = "Samples in the outbreak cluster(s)")
 
 outbreak_spread_by_method_plot
@@ -207,7 +210,7 @@ outbreak_spread_by_method_plot
 
 png(
     filename = "clean_results/outbreak_comparison_sensitivity.png", 
-    width = 6.5, height = 6, units = "in", res = 200)
+    width = 6.5, height = 5, units = "in", res = 200)
 gridExtra::grid.arrange(
     outbreak_clusters_by_method_plot,
     outbreak_spread_by_method_plot,
