@@ -27,7 +27,7 @@ process hiv_trace {
             --input !{input_fasta} \
             --reference !{reference} \
             --threshold !{distance_threshold} \
-            --ambiguities average \
+            --ambiguities skip \
             --minoverlap !{min_overlap} \
             --fraction 0.25 \
             --skip-alignment \

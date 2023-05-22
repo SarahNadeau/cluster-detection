@@ -7,21 +7,21 @@ library(treeio)
 
 Load BEAST data
 ```{r}
-# data_dir <- "clean_results/boston_confa"
-# beast_treeio <- treeio::read.beast(paste0(data_dir, "/beast_dta/third_try_regions_starting_tree_500000/combined_chains_mcc.tree"))
-# location_col <- 17
-# outbreak_annotation <- "CONF_A"
+data_dir <- "clean_results/confa_sensitivity/results_replicate_1"
+beast_treeio <- treeio::read.beast(paste0(data_dir, "/beast/mcc.tree"))
+location_col <- 18
+location_colname <- "region"
+outbreak_annotation <- "CONF_A"
 
-data_dir <- "clean_results/urmc"
-beast_treeio <- treeio::read.beast(paste0(data_dir, "/beast_dta/third_try_invariant_sites/combined_chains_mcc.tree"))
-location_col <- 14
-outbreak_annotation <- "URMC"
+# data_dir <- "clean_results/urmc/results_2023-05-15T13:15:38.785201-07:00"
+# beast_treeio <- treeio::read.beast(paste0(data_dir, "/beast/combined_chains_mcc.tree"))
+# location_col <- 14
+# location_colname <- "location"
+# outbreak_annotation <- "URMC"
 ```
 
 Collate per-sample results
 ```{r}
-location_colname <- "location"
-
 node_annotations <- as.data.frame(as_tibble(beast_treeio))
 beast_phylo <- ape::as.phylo(beast_treeio)
 
@@ -90,7 +90,7 @@ for (i in 1:n_tips) {
 beast_results <- sample_data %>%
     group_by(introduction_node) %>%
     mutate(cluster_size = n()) %>%
-    mutate(method = "beast_dta")
+    mutate(method = "beast")
 ```
 
 Write out per-sample results
@@ -107,14 +107,29 @@ write.table(
 
 Collate results per introduction
 ```{r}
-# Get descendents of outbreak introductions
+# function to see if a node is the child of an outbreak introduction
+get_outbreak_introduction <- function(node_idx, root_idx, outbreak_introductions) {
+    if (node_idx %in% outbreak_introductions$child) {
+        # base case - reached outbreak introduction
+        return(node_idx)
+    } else if (node_idx == root_idx) {
+        # base case - reached root and no outbreak introduction found
+        return(NA)
+    } else {
+        parent <- postorder_edges[which(postorder_edges[, 2] == node_idx), 1]
+        return(get_outbreak_introduction(parent, root_idx, outbreak_introductions))
+    }
+}
+
 outbreak_introductions <- introduction_data %>% filter(child_annotation == outbreak_annotation)
+n_tips <- length(beast_phylo$tip.label)
 is_first <- T
-for (node_idx in outbreak_introductions$child) {
+for (i in 1:n_tips) {
     descendent_data_tmp <- data.frame(
-        tip = caper::clade.members(x = node_idx, phy = beast_phylo),
-        introduction_node = node_idx,
-        method = "beast_dta")
+        tip = i,
+        label = beast_phylo$tip.label[i],
+        tip_location = node_annotations[i, location_colname],
+        introduction_node = get_outbreak_introduction(i, n_tips + 1, outbreak_introductions))
     if (is_first) {
         descendent_data <- descendent_data_tmp
         is_first <- F
@@ -122,16 +137,10 @@ for (node_idx in outbreak_introductions$child) {
         descendent_data <- rbind(descendent_data, descendent_data_tmp)
     }
 }
-beast_descendent_data <- merge(
-    x = descendent_data, 
-    y = node_annotations  %>%
-        rename("location" = all_of(location_colname)) %>% 
-        dplyr::select(node, label, location),
-    by.x = "tip", 
-    by.y = "node",
-    all.x = T, 
-    all.y = F
-) %>% rename("tip_location" = location)
+
+beast_descendent_data <- descendent_data %>%
+    filter(!is.na(introduction_node)) %>%
+    mutate(method = "beast")
 ```
 
 Write out per-introduction results
