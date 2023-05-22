@@ -9,21 +9,21 @@ library(ape)
 
 # Analysis-specific parameters
 outbreak_annotation <- "CONF_A"
-data_dir <- "clean_results/boston_confa"
+data_dir <- "clean_results/confa/results_2023-05-15T13:26:05.095474-07:00"
 full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
 outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
 location_colname <- "division"
 
 # outbreak_annotation <- "URMC"
-# data_dir <- "clean_results/urmc"
+# data_dir <- "clean_results/urmc/results_2023-05-15T13:15:38.785201-07:00"
 # full_metadata <- read.csv(paste0(data_dir, "/nextstrain_metadata.csv"))
 # outbreak_metadata <- full_metadata %>% filter(location == outbreak_annotation)
 # location_colname <- "location"
 ```
 
-Get clusters from treetime mugration output
+Get clusters from auspice annotated tree
 ```{r}
-mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/mugration/annotated_tree.nhx"))
+mugration_treeio <- treeio::read.nhx(paste0(data_dir, "/nextstrain/nextstrain__timetree.nhx"))
 node_annotations <- as.data.frame(as_tibble(mugration_treeio))
 mugration_phylo <- ape::as.phylo(mugration_treeio)
 
