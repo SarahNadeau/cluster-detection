@@ -161,13 +161,21 @@ beast_plot <- ggtree(
     shared_theme
 
 # Plot HIV-TRACE clusters
-cluster_data_to_plot <- cluster_data %>%
+cluster_data_to_graph <- cluster_data %>%
     filter(ID1 != ID2) %>%
-    mutate(is_outbreak_cluster = ID1 %in% focal_outbreak_samples | ID2 %in% focal_outbreak_samples) %>%
-    filter(is_outbreak_cluster) %>%
     select(ID1, ID2)
-cluster_matrix <- as.matrix(cluster_data_to_plot)
-graph <- igraph::graph_from_edgelist(cluster_matrix, directed = F)
+graph_all <- igraph::graph_from_edgelist(as.matrix(cluster_data_to_graph), directed = F)
+clusters <- cluster_walktrap(graph_all)
+outbreak_clusters <- data.frame(
+    strain = clusters$names,
+    group = clusters$membership) %>%
+    group_by(group) %>%
+    mutate(is_outbreak = any(strain %in% focal_outbreak_samples)) %>%
+    ungroup() %>%
+    filter(is_outbreak)
+cluster_data_to_plot <- cluster_data_to_graph %>%
+    filter(ID1 %in% outbreak_clusters$strain)
+graph <- igraph::graph_from_edgelist(as.matrix(cluster_data_to_plot), directed = F)
 # Color nodes
 focal_region_samples <- metadata %>% filter(division == "Massachusetts")
 V(graph)$color <- case_when(
@@ -183,7 +191,7 @@ V(graph)$label <- case_when(
 V(graph)$label.color <- "black"
 V(graph)$label.cex <- 0.8
 
-hivtrace_plot <- ggraph::ggraph(graph, layout = "igraph", algorithm = 'kk') +
+hivtrace_plot <- ggraph::ggraph(graph) +
     ggraph::geom_edge_link(alpha = 0.1) +
     ggraph::geom_node_point(aes(color = color), size = 1) +
     # ggraph::geom_node_text(aes(label = label), size = tiplab_size) +

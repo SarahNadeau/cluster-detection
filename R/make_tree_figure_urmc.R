@@ -61,7 +61,7 @@ clustertracker_tipdata <- per_sample_results %>%
         sample %in% clustertracker_outbreak_tree$tip.label) %>%
     select(sample, introduction_node, region) %>%
     mutate(location_to_plot = case_when(
-        sample == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "URMC (unlinked)",
+        sample == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "URMC",
         T ~ region)) %>%
     mutate(location_to_color = case_when(
         sample == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "Focal region",
@@ -77,7 +77,7 @@ augur_outbreak_tree <- treeio::tree_subset(
     levels_back = levels_back)
 augur_tipdata <- as_tibble(augur_outbreak_tree) %>%
     mutate(location_to_plot = case_when(
-        label == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "URMC (unlinked)",
+        label == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "URMC",
         T ~ location)) %>%
     mutate(location_to_color = case_when(
         label == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "Focal region",
@@ -96,7 +96,7 @@ beast_outbreak_tree <- treeio::tree_subset(
     levels_back = levels_back)
 beast_tipdata <- as_tibble(beast_outbreak_tree) %>%
     mutate(location_to_plot = case_when(
-        label == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "URMC (unlinked)",
+        label == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "URMC",
         T ~ location)) %>%
     mutate(location_to_color = case_when(
         label == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "Focal region",
@@ -148,16 +148,24 @@ beast_plot <- ggtree(
         hjust = 0) +
     shared_theme +
     lims(x = c(NA, 0.0005)) +
-    geom_treescale(label = "subs/site", fontsize = 2)  # y coord relative to # sequences
+    geom_treescale(label = "subs/site/year", fontsize = 2)  # y coord relative to # sequences
 
 # Plot HIV-TRACE clusters
-cluster_data_to_plot <- cluster_data %>%
+cluster_data_to_graph <- cluster_data %>%
     filter(ID1 != ID2) %>%
-    mutate(is_outbreak_cluster = ID1 %in% focal_outbreak_samples | ID2 %in% focal_outbreak_samples) %>%
-    filter(is_outbreak_cluster) %>%
     select(ID1, ID2)
-cluster_matrix <- as.matrix(cluster_data_to_plot)
-graph <- igraph::graph_from_edgelist(cluster_matrix, directed = F)
+graph_all <- igraph::graph_from_edgelist(as.matrix(cluster_data_to_graph), directed = F)
+clusters <- cluster_walktrap(graph_all)
+outbreak_clusters <- data.frame(
+    strain = clusters$names,
+    group = clusters$membership) %>%
+    group_by(group) %>%
+    mutate(is_outbreak = any(strain %in% focal_outbreak_samples)) %>%
+    ungroup() %>%
+    filter(is_outbreak)
+cluster_data_to_plot <- cluster_data_to_graph %>%
+    filter(ID1 %in% outbreak_clusters$strain)
+graph <- igraph::graph_from_edgelist(as.matrix(cluster_data_to_plot), directed = F)
 # Color nodes
 V(graph)$color <- case_when(
     V(graph)$name %in% focal_outbreak_samples ~ "Outbreak", 
@@ -168,15 +176,14 @@ name_to_label <- metadata$location
 names(name_to_label) <- metadata$strain
 V(graph)$label <- case_when(
     V(graph)$name %in% focal_outbreak_samples ~ "URMC", 
-    V(graph)$name == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "URMC\n(unlinked)",
+    V(graph)$name == "GCF_003950615.1_ASM395061v1_genomic.fna" ~ "URMC",
     T ~ name_to_label[V(graph)$name])
 V(graph)$label.color <- V(graph)$color
 V(graph)$label.cex <- 0.8
 
-hivtrace_plot <- ggraph::ggraph(graph, layout = "igraph", algorithm = 'kk') +
-    ggraph::geom_edge_link(alpha = 0.2) +
-    # ggraph::geom_node_point(aes(color = color), size = 3) +
-    ggraph::geom_node_text(aes(color = color, label = label), size = tiplab_size) +
+hivtrace_plot <- ggraph::ggraph(graph) +
+    ggraph::geom_edge_link(alpha = 0.15) +
+    ggraph::geom_node_point(aes(color = color), size = 2) +
     shared_color_scale +
     theme(axis.line=element_blank(),
       axis.text.x=element_blank(),
@@ -199,5 +206,5 @@ plot_list(
     legend_plot,
     labels = c("A", "B", "C", "D"),
     ncol = 3,
-    heights = c(1, 0.5))
-ggsave(filename = paste0(data_dir, "/all_trees.png"), width = 6, height = 5.5, units = "in")
+    heights = c(1, 0.4))
+ggsave(filename = paste0(data_dir, "/all_trees.png"), width = 6, height = 5, units = "in")
