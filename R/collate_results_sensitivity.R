@@ -6,17 +6,29 @@ library(rjson)
 library(ape)
 
 # Analysis-specific parameters
-run_names <- c(
-    "replicate_1",
-    "replicate_2",
-    "replicate_3")
-outbreak_annotation <- "CONF_A"
+# data_dir_prefix <- "clean_results/confa_sensitivity/results_"
+# run_names <- c(
+#     "replicate_1",
+#     "replicate_2",
+#     "replicate_3")
+# outbreak_annotation <- "CONF_A"
+# location_colname <- "division"
+# metadata_filename <- "/metadata_with_context.tsv"
+# metadata_func <- read.delim
+# clusters_filename <- "/hiv_trace/clusters_skip.json"
+
+data_dir_prefix <- "clean_results/urmc/"
+run_names <- c("results_2023-05-15T13:15:38.785201-07:00")
+outbreak_annotation <- "URMC"
+location_colname <- "location"
+metadata_filename <- "/nextstrain_metadata.csv"
+metadata_func <- read.csv
+clusters_filename <- "/hiv_trace/clusters.json"
 
 for (run_name in run_names) {
-    data_dir <- paste0("clean_results/confa_sensitivity/results_", run_name)
-    full_metadata <- read.delim(paste0(data_dir, "/metadata_with_context.tsv"))
-    outbreak_metadata <- full_metadata %>% filter(division == outbreak_annotation)
-    location_colname <- "division"
+    data_dir <- paste0(data_dir_prefix, run_name)
+    full_metadata <- metadata_func(paste0(data_dir, metadata_filename))
+    outbreak_metadata <- full_metadata[which(full_metadata[[location_colname]] == outbreak_annotation), ]
 
     ### Load tabular results files ###
 
@@ -92,7 +104,7 @@ for (run_name in run_names) {
 
     ### Parse HIV-TRACE json output ###
 
-    clusters_json <- readr::read_file(paste0(data_dir, "/hiv_trace/clusters_skip.json"))
+    clusters_json <- readr::read_file(paste0(data_dir, clusters_filename))
     clusters_list <- rjson::fromJSON(json_str = clusters_json)
 
     cluster_idxs <- clusters_list$trace_results$Nodes$cluster$values
@@ -181,7 +193,7 @@ for (run_name in run_names) {
         filter(!is.na(introduction_node)) %>%
         mutate(method = "mugration")
 
-    ### Get clusters from clustertracker output ###
+    ### Get clusters from clustertracker output (using ancestral trait data) ###
 
     full_metadata_tmp <- full_metadata  %>%
         rename("location" = all_of(location_colname))
@@ -200,6 +212,13 @@ for (run_name in run_names) {
         group_by(tip) %>%
         slice_max(order_by = introduction_node, n = 1)
 
+    ### Get clusters from clustertracker output (raw output) ###
+    clustertracker_descendent_data_2 <- clustertracker_results %>%
+        tidyr::separate(introduction_node, remove = F, into = c("location", "node_idx"), sep = "_node_") %>%
+        filter(location == outbreak_annotation) %>%
+        mutate(tip = sample, label = sample, method = "clustertracker_no_asr") %>%
+        select(tip, introduction_node, method, label, location)
+
     ### Get clusters from hiv-trace output ###
 
     hivtrace_descendent_data <- rbind(cluster_results, singleton_results) %>% 
@@ -213,6 +232,7 @@ for (run_name in run_names) {
     full_results_descendent_data <- rbind(
         mugration_descendent_data,
         clustertracker_descendent_data,
+        clustertracker_descendent_data_2,
         hivtrace_descendent_data
     ) %>% rename("tip_location" = location)
 
