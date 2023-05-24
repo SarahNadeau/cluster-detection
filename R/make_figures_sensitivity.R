@@ -4,6 +4,7 @@ library(tidyverse)
 library(ggplot2)
 library(ggtree)
 library(gridExtra)
+library(ggpubr)
 
 # Analysis-specific parameters
 data_dirs <- list(
@@ -105,8 +106,8 @@ for (i in 1:length(data_dirs)) {
                 is_focal_region = tip_location %in% c(focal_region_annotation[[1]], focal_region_annotation[[2]]),  # this assumes annotations don't overlap
                 method = factor(
                     method, 
-                    levels = c("hivtrace", "clustertracker", "mugration", "beast"),
-                    labels = c("HIV-\nTRACE", "ClusterTracker", "augur", "BEAST")))
+                    levels = c("hivtrace", "clustertracker_no_asr", "clustertracker", "mugration", "beast"),
+                    labels = c("HIV-\nTRACE", "ClusterTracker", "ClusterTracker\nASR", "augur", "BEAST")))
 
     if (is_first) {
         results_per_sample <- results_per_sample_tmp
@@ -141,10 +142,10 @@ outbreak_clusters_by_method_summary <- outbreak_clusters_by_method %>%
             method == "BEAST" ~ NA,
             T ~ max_n_clusters))  # no replicates run, don't show errbars
 
-outbreak_clusters_by_method_plot <- ggplot(data = outbreak_clusters_by_method_summary) +
+outbreak_clusters_by_method_plot <- ggplot(data = outbreak_clusters_by_method_summary %>% filter(outbreak == "SARS-CoV-2 superspreading")) +
     geom_col(aes(x = method, y = mean_n_clusters)) +
     geom_errorbar(aes(x = method, ymin = min_n_clusters_to_plot, ymax = max_n_clusters_to_plot)) +
-    facet_grid(. ~ outbreak) +
+    # facet_grid(. ~ outbreak) +
     theme_bw() + 
     labs(x = element_blank(), y = "# clusters with outbreak samples") +
     geom_hline(aes(yintercept = 1), linetype = "dashed")
@@ -194,25 +195,34 @@ gg_color_hue <- function(n) {
   hcl(h = hues, l = 65, c = 100)[1:n]
 }
 
-outbreak_spread_by_method_plot <- ggplot(data = outbreak_spread_by_method_summary) +
+outbreak_spread_by_method_plot <- ggplot(
+    data = outbreak_spread_by_method_summary %>% 
+        filter(method != "ClusterTracker\nASR", outbreak == "SARS-CoV-2 superspreading")) +
     geom_bar(aes(x = method, y = mean_value, fill = `Sample type`), position = "dodge", stat = "identity") +
     geom_errorbar(aes(x = method, ymin = min_value_to_plot, ymax = max_value_to_plot), position = position_dodge2()) +
     theme_bw() +
     scale_fill_manual(values = rev(gg_color_hue(3))) +
-    facet_grid(. ~ outbreak) +
-    theme(legend.position = c(0.335, 0.65), legend.background = element_rect(fill = "white", color = "black", linewidth = 0.25)) +
+    theme(legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 6)) +
+    # facet_grid(. ~ outbreak) +
+    # theme(legend.position = c(0.335, 0.65), legend.background = element_rect(fill = "white", color = "black", linewidth = 0.25)) +
     labs(x = element_blank(), y = "Samples in the outbreak cluster(s)")
 
 outbreak_spread_by_method_plot
 
 
 ### Plot all in one ###
-
+legend_plot <- ggpubr::as_ggplot(ggpubr::get_legend(outbreak_spread_by_method_plot))
+m <- matrix(NA, 2, 2)
+m[1, 1] <- 1
+m[1, 2] <- 2
+m[2, 2] <- 3
 png(
-    filename = "clean_results/outbreak_comparison_sensitivity.png", 
-    width = 6.5, height = 5, units = "in", res = 200)
+    filename = "clean_results/outbreak_comparison_sensitivity_sars_cov_2_only.png", 
+    width = 6.5, height = 3.5, units = "in", res = 200)
 gridExtra::grid.arrange(
     outbreak_clusters_by_method_plot,
-    outbreak_spread_by_method_plot,
-    ncol = 1)
+    outbreak_spread_by_method_plot + theme(legend.position = "none"),
+    legend_plot,
+    layout_matrix = m,
+    heights = c(1, 0.1))
 dev.off()
