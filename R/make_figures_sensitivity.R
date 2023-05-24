@@ -190,10 +190,12 @@ outbreak_spread_by_method_summary <- outbreak_spread_by_method %>%
             method == "BEAST" ~ NA,
             T ~ max_value)) # no replicates run, don't show errbars
 
-gg_color_hue <- function(n) {
-  hues = seq(15, 375, length = n + 1)
-  hcl(h = hues, l = 65, c = 100)[1:n]
-}
+shared_fill_scale <- scale_fill_manual(
+    values = list(
+        "Outbreak" = "#00BA38", 
+        "Focal region" = "#619CFF", 
+        "Other (divisional) region" = "#F8766D")) 
+
 
 outbreak_spread_by_method_plot <- ggplot(
     data = outbreak_spread_by_method_summary %>% 
@@ -201,7 +203,7 @@ outbreak_spread_by_method_plot <- ggplot(
     geom_bar(aes(x = method, y = mean_value, fill = `Sample type`), position = "dodge", stat = "identity") +
     geom_errorbar(aes(x = method, ymin = min_value_to_plot, ymax = max_value_to_plot), position = position_dodge2()) +
     theme_bw() +
-    scale_fill_manual(values = rev(gg_color_hue(3))) +
+    shared_fill_scale +
     theme(legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 6)) +
     # facet_grid(. ~ outbreak) +
     # theme(legend.position = c(0.335, 0.65), legend.background = element_rect(fill = "white", color = "black", linewidth = 0.25)) +
