@@ -18,6 +18,7 @@ per_sample_results <- read.delim(file = paste0(data_dir, "/collated_results_per_
 
 augur_tree <- treeio::read.nhx(paste0(data_dir, "/nextstrain/nextstrain__timetree.nhx"))
 augur_node_annotations <- as.data.frame(as_tibble(augur_tree))
+augur_tree_with_confidence <- treeio::read.nextstrain.json(paste0(data_dir, "/augur_traits/auspice.json"))
 
 beast_tree <- treeio::read.beast(paste0(data_dir, "/beast/mcc.tree"))
 beast_node_annotations <- as.data.frame(as_tibble(beast_tree))
@@ -89,6 +90,22 @@ augur_tipdata <- as_tibble(augur_outbreak_tree) %>%
         division == "Massachusetts" ~ "Focal region",
         T ~ "Other (divisional) region"))
 
+# Get confidence for outbreak clade root location
+augur_tipdata_all <- as_tibble(augur_tree)
+augur_outbreak_mcra_label <- augur_tipdata_all[[augur_outbreak_mrca, "label"]]
+augur_nodepie_data <- as_tibble(augur_tree_with_confidence) %>%
+    filter(label == augur_outbreak_mcra_label) %>%
+    select(node, starts_with("division.confidence.")) %>%
+    pivot_longer(cols = starts_with("division.confidence."), names_to = "location", values_to = "confidence") %>%
+    mutate(location_to_color = case_when(
+        location == "division.confidence.CONF_A" ~ "Outbreak",
+        location == "division.confidence.Massachusetts" ~ "Focal region",
+        T ~ "Other (divisional) region")) %>%
+    group_by(node, location_to_color) %>%
+    summarize(confidence = sum(as.numeric(confidence), na.rm = T)) %>%
+    pivot_wider(id_cols = node, names_from = location_to_color, values_from = confidence) %>%
+    mutate(node = length(as.phylo(augur_outbreak_tree)$tip.label) + 1)  # node numbers don't match up, but node labels should
+
 beast_outbreak_mrca <- ape::getMRCA(
     phy = as.phylo(beast_tree), 
     tip = focal_outbreak_samples)
@@ -102,6 +119,35 @@ beast_tipdata <- as_tibble(beast_outbreak_tree) %>%
         region == "CONF_A" ~ "Outbreak",
         T ~ "Other (global) region"))
 
+# A convoluted way to parse the list entries for region.set and region.set.prob
+# from beast node data
+regions <- unique(as_tibble(beast_tree)$region)
+beast_nodepie_data <- beast_tipdata %>%
+    select(node, region.set, region.set.prob) %>%
+    unnest_wider(col = region.set, names_sep = "_") %>%
+    separate(
+        col = region.set.prob, 
+        into = c(paste0("prob", 1:length(regions))), 
+        sep = ",") %>%
+    pivot_longer(
+        cols = c(paste0("region.set_", 1:length(regions))), 
+        names_to = "region_idx", 
+        names_prefix = "region.set_",
+        values_to = "region_name") %>%
+    pivot_longer(
+        cols = c(paste0("prob", 1:length(regions))),
+        names_to = "prob_idx", 
+        names_prefix = "prob",
+        values_to = "prob") %>%
+    mutate(prob = as.numeric(gsub(x = prob, pattern = "[c()]", replacement = ""))) %>%
+    filter(region_idx == prob_idx, !is.na(region_name)) %>%
+    mutate(location_to_plot = case_when(
+        region_name == "CONF_A" ~ "Outbreak",
+        T ~ "Other (global) region")) %>%
+    group_by(node, location_to_plot) %>%
+    summarize(prob = sum(prob)) %>%
+    pivot_wider(id_cols = node, names_from = location_to_plot, values_from = prob)
+
 # Define standard colors
 gg_color_hue <- function(n) {
   hues = seq(15, 375, length = n + 1)
@@ -111,7 +157,8 @@ gg_color_hue <- function(n) {
 shared_color_scale <- scale_color_manual(
     breaks = c("Outbreak", "Focal region", "Other (divisional) region", "Other (global) region"),
     values = c("#00BA38", "#619CFF", "#F8766D", "#C77CFF"),
-    limits = c("Outbreak", "Focal region", "Other (divisional) region", "Other (global) region")) 
+    limits = c("Outbreak", "Focal region", "Other (divisional) region", "Other (global) region"),
+    aesthetics = c("color", "fill")) 
 shared_theme <- theme(legend.title = element_blank())
 tiplab_size <- 1.8
 
@@ -123,6 +170,11 @@ clustertracker_plot <- ggtree(tr = clustertracker_outbreak_tree) %<+% clustertra
     geom_treescale(label = "subs/site", x = 3.3E-4, y = 3, fontsize = 2)  # y coord relative to # sequences
 
 # Plot augur tree
+augur_root_pie <- ggtree::nodepie(augur_nodepie_data, cols = 2:(ncol(augur_nodepie_data)))
+augur_root_pie <- lapply(
+    X = augur_root_pie, 
+    FUN = function(g) g + shared_color_scale)
+
 augur_mrsd <- unlist(metadata %>%
     filter(strain %in% as.phylo(augur_outbreak_tree)$tip.label) %>% 
     arrange(desc(date)) %>%
@@ -133,6 +185,10 @@ augur_plot <- ggtree(
     aes(color = location_to_color), 
     mrsd = as.Date(augur_mrsd), 
     as.Date = T) %<+% augur_tipdata +
+    geom_inset(
+        insets = augur_root_pie,
+        width = 0.15, height = 0.15,
+        hjust = 8) +
     geom_tiplab(aes(label = location_to_plot), size = tiplab_size) +
     shared_color_scale +
     theme_tree2() +
@@ -140,6 +196,13 @@ augur_plot <- ggtree(
     shared_theme
 
 # Plot beast tree
+pies <- ggtree::nodepie(beast_nodepie_data, cols = 2:(ncol(beast_nodepie_data)))
+n_tips <- length(as.phylo(beast_outbreak_tree)$tip.label)
+internal_pies <- pies[(n_tips + 1):length(pies)]
+root_pie <- pies[n_tips + 1]
+root_pie <- lapply(
+    X = root_pie, 
+    FUN = function(g) g + shared_color_scale)
 beast_mrsd <- unlist(metadata %>%
     filter(strain %in% as.phylo(beast_outbreak_tree)$tip.label) %>% 
     arrange(desc(date)) %>%
@@ -150,6 +213,10 @@ beast_plot <- ggtree(
     aes(color = location_to_color), 
     mrsd = as.Date(beast_mrsd), 
     as.Date = T) %<+% beast_tipdata +
+    geom_inset(
+        insets = root_pie,
+        width = 0.2, height = 0.2,
+        hjust = 8) +
     geom_tiplab(aes(label = location_to_plot), size = tiplab_size) +
     shared_color_scale +
     geom_nodelab(
@@ -219,5 +286,3 @@ plot_list(
     ncol = 3,
     heights = c(1, 0.15))
 ggsave(filename = paste0(data_dir, "/all_trees.png"), width = 6, height = 7, units = "in")
-
-
