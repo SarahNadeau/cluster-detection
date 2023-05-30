@@ -1,7 +1,7 @@
 # Molecular transmission cluster detection project
 
 This project aims to be a methods guide and resource for molecular transmission cluster detection for public health.
-<!-- The full write-up is available at TODO. -->
+The full write-up is available on [virological.org](https://virological.org/t/methods-for-molecular-transmission-cluster-detection/934).
 
 ## Methods implemented:
 * HIV-TRACE
